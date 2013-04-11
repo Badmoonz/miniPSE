@@ -1,0 +1,17 @@
+digraph Example5 {
+  inputs = "x";
+  outputs = "x1,x2,x3";
+
+  tube1[block_type="Tube"];
+  tube2[block_type="Tube"];
+  tube3[block_type="Tube"];
+  tube4[block_type="Tube"];
+
+  source:x -> tube1:x;
+  tube1:y -> stock:x1;
+  tube1:y -> tube2:x;
+  tube1:y -> tube3:x;
+  tube2:y -> stock:x2;
+  tube3:y -> tube4:x;
+  tube4:y -> stock:x3;
+}

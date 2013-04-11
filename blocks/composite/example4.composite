@@ -1,0 +1,14 @@
+digraph Example4 {
+  inputs = "xs";
+  outputs = "fs";
+
+  f[block_type="F"];
+  map[block_type="Map"];
+  map2[block_type="Map"];
+  source:xs -> map:xs;
+  map:x -> map2:xs;
+  map2:x -> f:x;
+  f:f -> map2:f;
+  map:fs -> stock:fs;
+  map2:fs -> map:f;
+}

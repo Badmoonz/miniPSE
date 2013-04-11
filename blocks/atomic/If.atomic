@@ -1,0 +1,6 @@
+digraph If {
+  inputs = "x";
+  outputs = "true, false";
+  initial -> initial [inputs="x", outputs="true"];
+  initial -> initial [inputs="x", outputs="false"];
+}

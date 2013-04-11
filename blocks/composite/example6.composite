@@ -1,0 +1,11 @@
+digraph Example6 {
+  inputs = "xs";
+  outputs = "fs";
+  
+  f [block_type="F"];
+  comp [block_type="Example"];
+  
+  source:xs -> f:x;
+  f:f -> comp:xs;
+  comp:fs -> stock:fs;
+}

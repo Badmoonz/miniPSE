@@ -1,0 +1,6 @@
+digraph F {
+  inputs = "x";
+  outputs = "f";
+  
+  initial -> initial [inputs="x", outputs="f"];
+}

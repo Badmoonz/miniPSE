@@ -1,0 +1,5 @@
+digraph Tube {
+  inputs = "x";
+  outputs = "y";
+  initial -> initial [inputs="x", outputs="y"];
+}

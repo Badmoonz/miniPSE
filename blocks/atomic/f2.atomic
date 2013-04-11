@@ -1,0 +1,7 @@
+digraph F2 {
+  inputs = "x";
+  outputs = "f";
+  
+  initial -> mutate [inputs="x", outputs="f"];
+  mutate -> initial [inputs="x", outputs="f"];
+}

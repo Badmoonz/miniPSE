@@ -1,0 +1,1 @@
+-w /home/alexey.kozlov/Documents/DIPLOMA/miniPSE/src/unittest/ -v --with-cover  --cover-package scheme
