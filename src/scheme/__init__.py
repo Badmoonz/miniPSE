@@ -26,8 +26,4 @@ from library import get_block
 # from workflow import WorkflowState
 # from workflow import Workflow
 
-clear_library()
-import_library(os.path.dirname(__file__) + "/../../blocks/atomic", verbose = True)
-import_library(os.path.dirname(__file__) + "/../../blocks/composite", verbose = True)
-
 lib = get_main_library()
