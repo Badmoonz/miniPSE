@@ -5,7 +5,7 @@
 import networkx as nx
 
 from composite import Composite
-from atomic import Block
+# from atomic import Block
 
 import copy
 from copy import deepcopy
@@ -118,12 +118,15 @@ class Workflow(object):
   def attracting_components(self):
     return nx.attracting.attracting_components(self._flow_graph)
 
+
+WaveHistory = namedtuple('WaveHistory', ['state', 'split'])
+
 class WorkflowState(object):
   def __init__(self, parent = None, composite = None):
     self._block_states = {}
     self._wave_front = set()
     self._composite = None
-    self._port_history = {}
+    self._block_history = {}
     self._locked_blocks = {}
     if parent == None and composite == None:
       raise Exception, "Workflow cannot be initialized without parent workflow instance or composite schedule"
@@ -146,7 +149,7 @@ class WorkflowState(object):
  
   @property
   def port_history(self):
-    return self._port_history
+    return self._block_history
 
  
   def save(self, path):
@@ -165,22 +168,15 @@ class WorkflowState(object):
     new_state = WorkflowState(parent = self)
     blocks_to_launch = set()
     for dst_block in self._dst_map:
-      block_instance = self._composite.blocks[dst_block]['block_type']
-      if dst_block in self._locked_blocks:
-        inputs_to_check = set(self._dst_map[dst_block].keys()).intersection(self._locked_blocks[dst_block])
-        if any([self._dst_map[dst_block][j].splitting.is_concurrent(self._dst_map[dst_block][k].splitting) for j,k in combinations(inputs_to_check, 2)]):
-          raise Exception, "Race condition on block `%s` "%(wave.dst_block)
-      else:
-        required_inputs = block_instance.required_inputs(self.block_state[dst_block], self._composite.connected_ports(dst_block))
-        if len(required_inputs) > 1:
-          self._locked_blocks[dst_block] = required_inputs
-      block_work_variants = block_instance.work(self.block_state[dst_block], set(self._dst_map[dst_block].keys()))
+      block_work_variants = self._block_work(dst_block, self.block_state[dst_block], set(self._dst_map[dst_block].keys()))
       if block_work_variants:
         print block_work_variants
         blocks_to_launch.add((dst_block, iset(block_work_variants)))
     for state in self._evolve_state(blocks_to_launch):
       yield state
 
+  def _block_work(self, block, state , inputs): 
+    return self._composite.blocks[block]['block_type'].work(state, inputs)
  
   def _evolve_state(self, blocks_to_launch):
     if not blocks_to_launch:
@@ -204,18 +200,20 @@ class WorkflowState(object):
             candidate_edges = self._composite.edges_from_port(dst_block, o)
             excited_edges += candidate_edges
           
-          unite_spliting = None
+          united_spliting = self._block_history[dst_block].wave.splitting if self._block_history.has_key(dst_block) else BaseWaveSplit(init = None)
           for i in in_ports:
             used_wave = self._dst_map[dst_block][i]
-            new_state._add_port_history(dst_block, i, used_wave.splitting)
             new_state._wave_front.remove(used_wave)
-            unite_spliting = used_wave.splitting if unite_spliting is None else unite_spliting + used_wave.splitting
-          
+            unite_spliting = united_spliting + used_wave.splitting
+          for i in in_ports:
+            new_state._add_block_history(dst_block, i, self.block_state[dst_block], unite_spliting)
           j = 0
           splitting_count = len(excited_edges) 
+          new_spliting.after = self._split_history(dst_block)
           for e in excited_edges:
-            new_spliting = deepcopy(unite_spliting)
+            new_spliting = deepcopy(united_spliting)
             new_spliting.expand(j, splitting_count)
+
             new_state._wave_front.add(Wave(e, new_spliting))     
             j+=1       
           new_state._block_states[dst_block] = new_block_state
@@ -234,17 +232,27 @@ class WorkflowState(object):
     return wavefront_grouped
 
 
-  def _add_port_history(self, block, port, wavesplit):
-    if not self._port_history.has_key(block):
-      self._port_history[block] = {}
-    if not self._port_history[block].has_key(port):
-      self._port_history[block][port] = wavesplit
-    elif wavesplit.is_expanded(self._port_history[block][port]):
-      self._port_history[block][port] = wavesplit
+  def _add_block_history(self, block, port, state, split):
+    if not self._block_history.has_key(block):
+      self._block_history[block] = {}
+    if not self._block_history[block].has_key(port):
+      self._block_history[block][port] = WaveHistory(state, splitting)
+      return
+    pre_state = self._block_history[block][port].state
+    pre_split = self._block_history[block][port].split
+    if not split.is_expanded_from(pre_split):
+      raise Exception, "Race condition on block `%s` port `%s`"%(block, pre_wave.dst_port)  
+    if self._block_work(block, pre_state, set(port)) and not pre_split.is_ahead(split):
+      raise Exception, "Race condition on block `%s` state `%s` "%(block, pre_state) 
     else:
-      raise Exception, "Race condition on block `%s` port `%s`"%(block, port)  
-    print "ph:", self._port_history
+      self._block_history[block][port] = WaveHistory(state, split) 
+    print "bh:", self._block_history
 
+  def _split_history(self, block):
+    result = BaseWaveSplit(init = None)
+    for wh in self._block_history[block].values():
+      result += wh.split
+    return result if not result.is_basic() else None
  
   def _wavefront_src_map(self):
     wavefront_grouped = {}
@@ -278,7 +286,7 @@ class WorkflowState(object):
     self._composite = parent_state._composite
     self._wave_front = deepcopy(parent_state._wave_front)
     self._block_states = deepcopy(parent_state._block_states)
-    self._port_history = deepcopy(parent_state._port_history)
+    self._block_history = deepcopy(parent_state._block_history)
 
 
   def _colored_composte(self):
@@ -324,66 +332,76 @@ class WorkflowState(object):
 
 DiffPair = namedtuple('DiffPair', ['fst', 'snd'])
 
+
 class WaveSplit(object):
   def __init__(self, id = 0, length = 1, init  = True):
     self._value = list([None]*length)
     self._value[id] = init
-  
-  def expand(self, id, length):
+
+
+  def expand(self, id = 0, length = 1):
     if not length == 1:
       for i in range(len(self)):
-        if self._value[i] in [True, False]:
+        if isinstance(self._value[i], bool):
           self._value[i] = WaveSplit(id, length)
         elif not self._value[i] is None:
           self._value[i].expand(id, length)
     else:
-      for i in range(len(self)):
-        if self._value[i] == True:
-          self._value[i] = False
-        elif isinstance(self._value[i], self.__class__):
-          self._value[i].expand(id, length)
+      self._spoil()
     return self
 
+
+  def is_expanded_from(self, other):
+    def expanded(diff):
+      if isinstance(diff, DiffPair):
+        return not diff.fst is None
+      else:
+        return all([expanded(d) for d in diff if d])
+    return expanded(self._differ(other))  
+
+
+  def is_ahead(self, other):
+    def is_advanced(diff, no_race):
+      if isinstance(diff, DiffPair):
+        return diff.fst == True or (diff.snd != True) and None
+      else:
+        mp = [is_advanced(d, no_race) for d in diff if d]
+        mp = filter(lambda a: not a is None, mp)
+        return any(mp) and (all(mp) or no_race)
+   
+    return not other._followed_by(self) and is_advanced(self._differ(other), self._followed_by(other))
+
+  def _followed_by(self, other):
+    return False
+
+  def _spoil(self):
+    for i in range(len(self)):
+      if self._value[i] == True:
+        self._value[i] = False
+      elif isinstance(self._value[i], WaveSplit):
+        self._value[i]._spoil()
+    return self
+
+
   def _differ(self, other):
-    if not isinstance(other, self.__class__):
+    if not isinstance(other, WaveSplit):
       raise TypeError, "Can be applied only to WaveSplit"  
     if len(self) != len(other):
       raise Exception, "Cannot be compared"
     for i in xrange(len(self)):
       if self._value[i] == other[i]:
-        continue
+        yield None
       elif isinstance(self._value[i], (bool,type(None))) or isinstance(other[i], (bool,type(None))):
         yield DiffPair(self._value[i], other[i])
-      elif isinstance(self._value[i], self.__class__) and isinstance(other[i], self.__class__):
+      elif isinstance(self._value[i], WaveSplit) and isinstance(other[i], WaveSplit):
         yield [diff for diff in self._value[i]._differ(other[i])]
-
-
-  def is_concurrent(self, other):
-    def concurrency_counter(diff, counter = 0):
-      # if counter > 0:
-      #   return counter
-      if isinstance(diff, DiffPair):
-        return (diff[0] == True) + (diff[1] == True)
-      else:
-        return reduce(lambda y,x: y + concurrency_counter(x, y), diff, counter)
-    
-    return concurrency_counter(self._differ(other)) != 1
-
-
-  def is_expanded(self, other):
-    def expanded(diff):
-      if isinstance(diff, DiffPair):
-        return not isinstance(diff[0], type(None))
-      else:
-        return all([expanded(d) for d in diff])
-    return expanded(self._differ(other))  
 
 
   def __add__(self, other):
     result = deepcopy(self)
     if other is None:
       return result
-    if not isinstance(other, self.__class__):
+    if not isinstance(other, WaveSplit):
       raise TypeError, "Unsupported operator +"
     if len(self) != len(other):
       raise Exception, "Different splitings"
@@ -393,21 +411,15 @@ class WaveSplit(object):
         result[i] = other[i]
       elif other[i] is None:
         continue
-      elif not isinstance(result[i], self.__class__) or not isinstance(other[i], self.__class__):
-        raise TypeError, "Unsupported operator +"
       else:
-        result[i] += other[i]
+        result[i] = result[i] if isinstance(result[i], bool) else other[i] if isinstance(other[i], bool) else result[i] + other[i]
     if all([isinstance(i, bool) for i in result]):
-      result = WaveSplit().expand(0,1) if len(result) == 1 else False
+      if len(result) == 1:
+        result.__init__(init = False)
+      else:
+        result = False
     return result
         
-
-  def __deepcopy__(self, memo):
-    result = WaveSplit(0,1)
-    result._value = deepcopy(self._value)
-    return result
-
-
   def __repr__(self):
     return str(self._value)
 
@@ -432,25 +444,47 @@ class WaveSplit(object):
     return hash(self._key())
 
 
-  def __eq__(self,other):
-    if isinstance(other, self.__class__):
+  def __eq__(self, other):
+    if isinstance(other, WaveSplit):
       return self._key() == other._key()
     return False
 
+  def __ne__(self, other):
+    return not self.__eq__(other)
 
-  # def __ge__(self, other):
-  #   if not isinstance(other, self.__class__):
-  #     raise TypeError, "Can be applied only to WaveSplit" 
-  #   if len(other) == 1:
-  #     return True
-  #   if len(ws) != len(other):
-  #     return False
+
+class BaseWaveSplit(WaveSplit):
+  _after = None
+
+  @property
+  def after(self):
+    return self._after
+
+
+  @after.setter
+  def after(self, value):
+    if not isinstance(value, (self.__class__, type(None))):
+      raise TypeError, "Can be applied only to BaseWaveSplit"
+    self._after = value
+
+  def __add__(self, other):
+    result = super(BaseWaveSplit, self).__add__(other)
+    result.after = other.after if not result.after else result.after + other.after if other.after else result.after
+    return result
+
+
+  def _followed_by(self, other):
+    return self.after != other.after and other.after and other.after.is_expanded_from(self)
+
+
+  def is_basic(self):
+    return isinstance(self._value[0], (bool, type(None)))
 
 
 class Wave(object):
   # _edge =(src_block, dst_block, (src_port, dst_port))
   # _splitting = [(part_id, parts_count),...]
-  def __init__(self, edge, splitting = WaveSplit(0,1)): 
+  def __init__(self, edge, splitting = BaseWaveSplit(0,1)): 
     self._splitting = splitting
     self._edge = edge
  
