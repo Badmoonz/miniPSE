@@ -9,6 +9,7 @@ from fa import FA
 from connection import ConnectionGraph as CG
 
 from utils import ports_set, edge_str
+from utils import RaceCondition
 
 import copy
 from copy import deepcopy
@@ -189,7 +190,6 @@ class WorkflowState(object):
         print "\twork variants : %s" % (target_variants)
         for block_work_variant in target_variants: 
           new_state = WorkflowState(parent = state)
-          #block_work_variant = block_work_variants[0]
           excited_edges = []
           out_ports = block_work_variant[1]
           in_ports = block_work_variant[0]
@@ -231,7 +231,7 @@ class WorkflowState(object):
       if not wavefront_grouped[wave.dst_block].has_key(wave.dst_port):
         wavefront_grouped[wave.dst_block][wave.dst_port] = wave
       else:
-        raise Exception, "Race condition on block `%s` port `%s`"%(wave.dst_block, wave.dst_port)
+        raise RaceCondition, "Race condition on block `%s` port `%s`"%(wave.dst_block, wave.dst_port)
     return wavefront_grouped
 
 
@@ -244,9 +244,9 @@ class WorkflowState(object):
     pre_state = self._block_history[block][port].state
     pre_split = self._block_history[block][port].split
     if not split.is_expanded_from(pre_split):
-      raise Exception, "Race condition on block `%s` port `%s`"%(block, pre_wave.dst_port)  
+      raise RaceCondition, "Race condition on block `%s` port `%s`"%(block, pre_wave.dst_port)  
     if self._block_work(block, pre_state, set(port)) and not pre_split.is_ahead(split):
-      raise Exception, "Race condition on block `%s` state `%s` "%(block, pre_state) 
+      raise RaceCondition, "Race condition on block `%s` state `%s` "%(block, pre_state) 
     else:
       self._block_history[block][port] = WaveHistory(state, split) 
     print "bh:", self._block_history

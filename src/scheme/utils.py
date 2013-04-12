@@ -7,3 +7,6 @@ def ports_set(edge_attrs):
 
 def edge_str(edge):
   return "%s[%s] -> %s[%s]"%(edge[0], edge[2][0], edge[1], edge[2][1])
+
+class RaceCondition(Exception):
+    pass
