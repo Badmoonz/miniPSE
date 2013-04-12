@@ -36,3 +36,6 @@ nosetests.xml
 
 # Dot files
 *.dot
+
+# Intellij IDEA files
+.idea
