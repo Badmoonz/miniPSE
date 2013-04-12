@@ -5,7 +5,6 @@
 import nose
 
 def main():
-  # print "Hello. I'm incomplite Diploma project. Please, will have wrote me until summer."
   nose.main()
   
 main()

@@ -19,10 +19,6 @@ import os
 from collections import namedtuple
 from itertools import combinations
 
-
-
-
-
 class Workflow(object):
   def __init__(self, composite):
     self._composite = composite
