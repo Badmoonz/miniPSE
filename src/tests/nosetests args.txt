@@ -1,1 +1,2 @@
--w /home/alexey.kozlov/Documents/DIPLOMA/miniPSE/src/tests/ -v --with-cover  --cover-package scheme
+ -v --with-cover  --cover-package scheme
+ -v --nocapture

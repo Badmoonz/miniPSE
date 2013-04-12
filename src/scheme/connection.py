@@ -110,6 +110,15 @@ class ConnectionGraph:
   def outputs(self):
     return self.properties['outputs']
   
+  def __getattr__(self, name):
+    try:
+      return self.__getattribute__(name)
+    except:
+      pass
+    finally:
+      return getattr(self._G, name)
+
+
   def show(self, hierarchical = False, external_name = None):
     dot = self.to_dot(external_name, hierarchical, subgraph = False)
     print dot
@@ -248,6 +257,9 @@ class StockBlock(BlockBase):
     name = external_name if external_name else self.name
     return "%s:%s" % (external_name, port)
   
+  def work(self, state, inputs):
+    return set()
+
   def to_dot(self, external_name, hierarchical = False, subgraph = False):
     pattern = """  {rank = %s; %s [shape=Mrecord, label="%s"];}\n"""
     label = "|".join(ports_dot(self._inputs))

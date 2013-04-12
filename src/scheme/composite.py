@@ -11,6 +11,8 @@ from sets import ImmutableSet as iset
 import networkx as nx
 import os.path as osp
 
+from utils import ports_set, edge_str
+
 class Composite(BlockBase):
   _block_type = 'composite'
   _nfa_graph = None
@@ -93,7 +95,7 @@ class Composite(BlockBase):
     result = []
     out_edges = G.out_edges(block, data = True)
     for e in out_edges:
-      if e[2]['tailport'] == port:
+      if e[2]['to_port'] == port:
         result.append((e[0], e[1], ports_set(e[2])))
     return result
 
@@ -102,6 +104,6 @@ class Composite(BlockBase):
     result = []
     in_edges = G.in_edges(block, data = True)
     for e in in_edges:
-      if e[2]['headport'] == port:
+      if e[2]['from_port'] == port:
         result.append((e[0], e[1], ports_set(e[2])))
     return result

@@ -13,7 +13,7 @@ def split_ports(s):
 class FA:
   _G = None
   _file_path = ""
-  INITIAL = "INITIAL"
+  INITIAL = "initial"
 
   def __init__(self, path):
     self._G = nx.read_dot(path)

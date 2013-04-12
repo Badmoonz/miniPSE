@@ -5,7 +5,10 @@
 import networkx as nx
 
 from composite import Composite
-# from atomic import Block
+from fa import FA
+from connection import ConnectionGraph as CG
+
+from utils import ports_set, edge_str
 
 import copy
 from copy import deepcopy
@@ -15,11 +18,9 @@ import os
 from collections import namedtuple
 from itertools import combinations
 
-def ports_set(edge_attrs):
-  return (edge_attrs["tailport"], edge_attrs["headport"])
 
-def edge_str(edge):
-  return "%s[%s] -> %s[%s]"%(edge[0], edge[2][0], edge[1], edge[2][1])
+
+
 
 class Workflow(object):
   def __init__(self, composite):
@@ -48,7 +49,7 @@ class Workflow(object):
     print "End"
     print "Pure Initial States:" 
     print "Pure Out States:"
-    self.show_state_graph()
+    # self.show_state_graph()
 
  
   def show_active_states(self):
@@ -176,7 +177,7 @@ class WorkflowState(object):
       yield state
 
   def _block_work(self, block, state , inputs): 
-    return self._composite.blocks[block]['block_type'].work(state, inputs)
+    return self._composite.blocks[block].work(state, inputs)
  
   def _evolve_state(self, blocks_to_launch):
     if not blocks_to_launch:
@@ -200,20 +201,22 @@ class WorkflowState(object):
             candidate_edges = self._composite.edges_from_port(dst_block, o)
             excited_edges += candidate_edges
           
-          united_spliting = self._block_history[dst_block].wave.splitting if self._block_history.has_key(dst_block) else BaseWaveSplit(init = None)
+          united_spliting = BaseWaveSplit(init = None)
           for i in in_ports:
             used_wave = self._dst_map[dst_block][i]
             new_state._wave_front.remove(used_wave)
             unite_spliting = united_spliting + used_wave.splitting
+
+          # fill history
           for i in in_ports:
-            new_state._add_block_history(dst_block, i, self.block_state[dst_block], unite_spliting)
-          j = 0
+            new_state._add_block_history(dst_block, i, self.block_state[dst_block], unite_spliting)       
+
           splitting_count = len(excited_edges) 
-          new_spliting.after = self._split_history(dst_block)
+          unite_spliting.after = self._split_history(dst_block)
+          j = 0
           for e in excited_edges:
             new_spliting = deepcopy(united_spliting)
             new_spliting.expand(j, splitting_count)
-
             new_state._wave_front.add(Wave(e, new_spliting))     
             j+=1       
           new_state._block_states[dst_block] = new_block_state
@@ -236,7 +239,7 @@ class WorkflowState(object):
     if not self._block_history.has_key(block):
       self._block_history[block] = {}
     if not self._block_history[block].has_key(port):
-      self._block_history[block][port] = WaveHistory(state, splitting)
+      self._block_history[block][port] = WaveHistory(state, split)
       return
     pre_state = self._block_history[block][port].state
     pre_split = self._block_history[block][port].split
@@ -250,7 +253,7 @@ class WorkflowState(object):
 
   def _split_history(self, block):
     result = BaseWaveSplit(init = None)
-    for wh in self._block_history[block].values():
+    for wh in self._block_history.get(block, {}).values():
       result += wh.split
     return result if not result.is_basic() else None
  
@@ -272,10 +275,10 @@ class WorkflowState(object):
     self._composite = composite_block
     # set initial block states
     for block_name in self._composite.blocks:
-      self._block_states[block_name] = Block.INITIAL
+      self._block_states[block_name] = FA.INITIAL
 
     #  set initial wavefront
-    init_edges = self._composite.edges_from_block(Composite.SOURCE)
+    init_edges = self._composite.edges_from_block(CG.SOURCE)
     self._wave_front = set([Wave(e) for e in init_edges])
 
 
