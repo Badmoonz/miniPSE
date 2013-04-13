@@ -3,7 +3,7 @@ digraph Example6 {
   outputs = "fs";
   
   f [block_type="F"];
-  comp [block_type="Example"];
+  comp [block_type="Example1"];
   
   source:xs -> f:x;
   f:f -> comp:xs;

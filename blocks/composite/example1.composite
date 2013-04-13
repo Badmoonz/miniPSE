@@ -1,4 +1,4 @@
-digraph Example {
+digraph Example1 {
   inputs = "xs";
   outputs = "fs";
 

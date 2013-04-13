@@ -9,6 +9,21 @@ import os.path as osp
 
 __library = dict()
 
+default_library_path = {
+    "atomic": osp.abspath(osp.dirname(__file__) + "../../../blocks/atomic"),
+    "composite" : osp.abspath(osp.dirname(__file__) + "../../../blocks/composite"),
+    "supercomposite" : osp.abspath(osp.dirname(__file__) + "../../../blocks/supercomposite")
+  }
+
+default_load_order = ["atomic", "composite", "supercomposite"]
+
+def load_default_libraries(lib_names):
+  importer = lambda lname: import_library(default_library_path[lname], verbose=True)
+  map(importer, lib_names)
+
+def load_all_default_libraries():
+  load_default_libraries(default_load_order)
+
 def clear_library():
   __library.clear()
 
