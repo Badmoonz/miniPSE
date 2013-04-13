@@ -1,7 +1,7 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-from src import scheme
+from .. import scheme
 
 from nose.tools import assert_equal
 from nose.tools import assert_not_equal

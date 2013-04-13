@@ -26,9 +26,9 @@ class ConnectionGraph:
   def file_path(self):
     return self._file_path
   
-  _G = None
+  _G = nx.MultiDiGraph()
   
-  def __init__(self, path):
+  def __init__(self, path = None):
     """
       Load and convert dot graph.
     """
@@ -48,9 +48,9 @@ class ConnectionGraph:
       if not (node == ConnectionGraph.SOURCE or  node == ConnectionGraph.STOCK):
         self.nodes[node] = library.get_block(self.nodes[node]["block_type"])
       elif node == ConnectionGraph.SOURCE:
-        self.nodes[node] = SourceBlock(self.inputs)
+        self.add_source(self.inputs)
       elif node == ConnectionGraph.STOCK:
-        self.nodes[node] = StockBlock(self.outputs)
+        self.add_stock(self.inputs)
    
   def __transform_eadges(self):
     for s in self.edges:
@@ -77,7 +77,13 @@ class ConnectionGraph:
     """
     if not port_name in getattr(self.node[block], direction):
       raise Exception, "Block '%s' doesn't have %s port '%s'" % (block, direction, port_name)
-  
+
+  def add_source(self, inputs):
+    self.nodes[ConnectionGraph.SOURCE] = SourceBlock(inputs)
+
+  def add_stock(self, outputs):
+    self.nodes[ConnectionGraph.STOCK] = StockBlock(outputs)
+
   @property
   def node(self):
     return self._G.node

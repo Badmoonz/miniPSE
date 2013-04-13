@@ -63,6 +63,10 @@ class Composite(BlockBase):
   def blocks(self):
     return self._connection_graph.node
 
+  @property
+  def connection_graph(self):
+    return self._connection_graph
+
   def has_path(self, src_block, dst_block):
     return nx.has_path(self._connection_graph,  src_block, dst_block)
 

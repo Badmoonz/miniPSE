@@ -9,9 +9,6 @@ digraph Example3 {
   source:x -> if1:x;
   source:x -> if2:x;
   if1:false -> tube1:x;
- ## if1:true -> tube2:x;
   if2:false -> tube1:x;
- ## if1:true -> tube2:x;
   tube1:y -> stock:x;
- ## tube2:y -> stock:x;
 }

@@ -2,9 +2,9 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-import os
-
 from connection import ConnectionGraph
+from connection import StockBlock
+from connection import SourceBlock
 from connection import TrivialConnectionGraph
 
 from fa import FA
@@ -13,6 +13,7 @@ from fa import TrivialFA
 from atomic import Atomic
 
 from composite import Composite
+from genericcomposite import GenericComposite
 
 from library import clear_library
 from library import reload_library

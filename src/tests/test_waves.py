@@ -7,7 +7,7 @@ from nose.tools import assert_raises
 
 from itertools import combinations
 
-from src.scheme.workflow import BaseWaveSplit as BWS
+from ..scheme.workflow import BaseWaveSplit as BWS
 
 class TestWaveSplit:
   def setUp(self):
