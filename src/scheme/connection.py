@@ -127,7 +127,6 @@ class ConnectionGraph:
 
   def show(self, hierarchical = False, external_name = None):
     dot = self.to_dot(external_name, hierarchical, subgraph = False)
-    print dot
     import subprocess
     from tempfile import NamedTemporaryFile
     import os

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
-from numpy.distutils import from_template
 
 from ..scheme import GenericComposite
 from ..scheme import ConnectionGraph
@@ -65,6 +64,7 @@ class Group(object):
                               "to_port" : "_".join(["to", e, edge["to_port"]])})
     G.add_stock(outs)
 
+    # Process ins
     ins = map(lambda (s, e, v, edge): "_".join(["from", s, edge["from_port"]]), in_edges)
     for in_edge in in_edges:
       s, e, v, edge = in_edge
