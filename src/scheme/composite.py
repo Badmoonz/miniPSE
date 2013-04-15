@@ -3,6 +3,8 @@
 # Copyright (C) Datadvance, 2013
 
 from blockbase import BlockBase
+from blockbase import split_by_comma
+
 import connection
 from fa import FA
 from fa import TrivialFA
@@ -15,6 +17,7 @@ from utils import ports_set, edge_str
 
 class Composite(BlockBase):
   _block_type = 'composite'
+  _is_composite = True
   _nfa_graph = None
 
   def load(self, path):
@@ -26,6 +29,8 @@ class Composite(BlockBase):
     self._name = self._connection_graph.name
     self._inputs = self._connection_graph.inputs
     self._outputs = self._connection_graph.outputs
+    if "block_groups" in self._connection_graph.properties:
+      self._block_groups = split_by_comma(self._connection_graph.properties["block_groups"])
 
   def _load_fa(self, path):
     path_fa = (path if path else self.file_path) + ".fa"

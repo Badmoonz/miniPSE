@@ -4,11 +4,17 @@
 
 from sets import ImmutableSet as iset
 
+# Useful function
+def split_by_comma(xs):
+  return map(lambda x: x.strip(), xs.split(","))
+
 class BlockBase(object):
   # Property section
   _name = ""
   _file_path = ""
   _block_type = "incomplite"
+  _is_composite = False
+  _block_groups = list()
   
   _connection_graph = None
   _fa_graph = None
@@ -28,6 +34,14 @@ class BlockBase(object):
   @property
   def block_type(self):
     return self._block_type
+
+  @property
+  def block_group(self):
+    return self._block_group
+
+  @property
+  def is_composite(self):
+    return self._is_composite
   
   @property
   def connection_graph(self):

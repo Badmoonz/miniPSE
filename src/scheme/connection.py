@@ -7,6 +7,7 @@
 import library
 import networkx as nx
 from blockbase import BlockBase
+from block_base import split_by_comma
 from sets import ImmutableSet as iset
 
 def ports_dot(ports):
@@ -15,12 +16,15 @@ def ports_dot(ports):
 def split_ports(s):
   if not s:
     return iset()
-  return iset(map(lambda p: p.strip(), s.split(",")))
+  return iset(split_by_comma(s))
 
 class ConnectionGraph:
   _file_path = ""
   STOCK = "stock"
   SOURCE = "source"
+
+  _inputs = set()
+  _outputs = set()
   
   @property
   def file_path(self):
@@ -38,8 +42,8 @@ class ConnectionGraph:
       self.__transform()
   
   def __transform(self):
-    self.properties["inputs"] = split_ports(self.properties["inputs"])
-    self.properties["outputs"] = split_ports(self.properties["outputs"])
+    self._inputs = split_ports(self.properties["inputs"])
+    self._outputs = split_ports(self.properties["outputs"])
     self.__transform_nodes()
     self.__transform_eadges()
   
@@ -50,7 +54,7 @@ class ConnectionGraph:
       elif node == ConnectionGraph.SOURCE:
         self.add_source(self.inputs)
       elif node == ConnectionGraph.STOCK:
-        self.add_stock(self.inputs)
+        self.add_stock(self.outputs)
    
   def __transform_eadges(self):
     for s in self.edges:
@@ -80,9 +84,11 @@ class ConnectionGraph:
 
   def add_source(self, inputs):
     self.nodes[ConnectionGraph.SOURCE] = SourceBlock(inputs)
+    self._inputs = set(inputs)
 
   def add_stock(self, outputs):
     self.nodes[ConnectionGraph.STOCK] = StockBlock(outputs)
+    self._outputs = set(outputs)
 
   @property
   def node(self):
@@ -110,11 +116,15 @@ class ConnectionGraph:
   
   @property
   def inputs(self):
-    return self.properties['inputs']
+    return self._inputs
   
   @property
   def outputs(self):
-    return self.properties['outputs']
+    return self._outputs
+
+  def add_edge(self, from_b, from_p, to_b, to_p):
+    self._G.add_edge(from_b, to_b,
+                     from_port=from_p, to_port=to_p)
   
   def __getattr__(self, name):
     try:
@@ -195,17 +205,6 @@ class ConnectionGraph:
     return dot
 
 class TrivialConnectionGraph(ConnectionGraph):
-  _inputs = list()
-  _outputs = list()
-  
-  @property
-  def inputs(self):
-    return self._inputs
-  
-  @property
-  def outputs(self):
-    return self._outputs
-  
   def __init__(self, inputs, outputs):
     self._inputs = inputs
     self._outputs = outputs
@@ -236,10 +235,11 @@ class TrivialConnectionGraph(ConnectionGraph):
 # Support class defenition
 class SourceBlock(BlockBase):
   _name = ConnectionGraph.SOURCE
-  _block_type = ConnectionGraph.STOCK
+  _block_type = ConnectionGraph.SOURCE
+  _block_group = ConnectionGraph.SOURCE
 
   def __init__(self, outputs):
-    self._outputs = outputs
+    self._outputs = set(outputs)
     self._connection_graph = TrivialConnectionGraph([], outputs)
 
   def port_to_dot(self, external_name, port, direction):
@@ -254,9 +254,10 @@ class SourceBlock(BlockBase):
 class StockBlock(BlockBase):
   _name = ConnectionGraph.STOCK
   _block_type = ConnectionGraph.STOCK
+  _block_group = ConnectionGraph.STOCK
 
   def __init__(self, inputs):
-    self._inputs = inputs
+    self._inputs = set(inputs)
     self._connection_graph = TrivialConnectionGraph(inputs, [])
   
   def port_to_dot(self, external_name, port, direction):

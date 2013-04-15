@@ -2,5 +2,7 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-from group import Group
-from clustering import Clustering
+import nose
+
+if __name__ == "__main__":
+  nose.main()
