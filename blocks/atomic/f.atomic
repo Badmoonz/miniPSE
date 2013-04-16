@@ -1,6 +1,7 @@
 digraph F {
   inputs = "x";
   outputs = "f";
+  block_groups = "functional, pure"
   
   initial -> initial [inputs="x", outputs="f"];
 }

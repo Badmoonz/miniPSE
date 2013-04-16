@@ -30,7 +30,7 @@ class Composite(BlockBase):
     self._inputs = self._connection_graph.inputs
     self._outputs = self._connection_graph.outputs
     if "block_groups" in self._connection_graph.properties:
-      self._block_groups = split_by_comma(self._connection_graph.properties["block_groups"])
+      self._block_groups = set(split_by_comma(self._connection_graph.properties["block_groups"]))
 
   def _load_fa(self, path):
     path_fa = (path if path else self.file_path) + ".fa"

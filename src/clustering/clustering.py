@@ -17,6 +17,9 @@ class Clustering(Composite):
   def load(self, path):
     raise NotImplementedError, "This method does not impliment yet!"
 
+  def save(self, path=None):
+    raise NotImplementedError, "This method does not impliment yet!"
+
   def __repr__(self):
     return "#%s#" % self.name
 

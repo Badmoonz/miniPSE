@@ -14,8 +14,8 @@ def _get_name_index():
 
 class GenericComposite(Composite):
   GENERIC = "generic"
-  _block_type = GenericComposite.GENERIC
-  _block_group = GenericComposite.GENERIC
+  _block_type = GENERIC
+  _block_group = GENERIC
 
   def __init__(self, path=None, connection_graph=None, name=None, group=None):
     if path:

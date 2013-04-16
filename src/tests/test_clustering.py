@@ -28,4 +28,3 @@ class TestClustering:
 
     clustered = Clustering(ex)
     clustered.aggregate_group(g, "Group1")
-    clustered.connection_graph.show(True)

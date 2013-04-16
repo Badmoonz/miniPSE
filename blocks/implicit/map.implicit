@@ -1,0 +1,12 @@
+digraph ImplicitMap {
+  inputs = "xs";
+  outputs = "fs";
+
+  base [block_groups="for-like"];
+  f [block_groups="functional"];
+
+  source:xs -> base:xs;
+  base:fs -> stock:fs;
+  base:x -> f:x;
+  f:f -> base:f;
+}
