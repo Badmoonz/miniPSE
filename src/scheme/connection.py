@@ -5,9 +5,10 @@
 # It is simple wrapper on nx.MultiDiGraph
 
 import library
+import keys
 import networkx as nx
 from blockbase import BlockBase
-from blockbase import split_by_comma
+from utils import split_by_comma
 from sets import ImmutableSet as iset
 
 def ports_dot(ports):
@@ -20,8 +21,6 @@ def split_ports(s):
 
 class ConnectionGraph:
   _file_path = ""
-  STOCK = "stock"
-  SOURCE = "source"
 
   _inputs = set()
   _outputs = set()
@@ -49,11 +48,11 @@ class ConnectionGraph:
   
   def __transform_nodes(self):
     for node in self.nodes:
-      if not (node == ConnectionGraph.SOURCE or  node == ConnectionGraph.STOCK):
+      if not (node == keys.SOURCE or  node == keys.STOCK):
         self.nodes[node] = library.get_block(self.nodes[node]["block_type"])
-      elif node == ConnectionGraph.SOURCE:
+      elif node == keys.SOURCE:
         self.add_source(self.inputs)
-      elif node == ConnectionGraph.STOCK:
+      elif node == keys.STOCK:
         self.add_stock(self.outputs)
    
   def __transform_eadges(self):
@@ -83,11 +82,11 @@ class ConnectionGraph:
       raise Exception, "Block '%s' doesn't have %s port '%s'" % (block, direction, port_name)
 
   def add_source(self, inputs):
-    self.nodes[ConnectionGraph.SOURCE] = SourceBlock(inputs)
+    self.nodes[keys.SOURCE] = SourceBlock(inputs)
     self._inputs = set(inputs)
 
   def add_stock(self, outputs):
-    self.nodes[ConnectionGraph.STOCK] = StockBlock(outputs)
+    self.nodes[keys.STOCK] = StockBlock(outputs)
     self._outputs = set(outputs)
 
   @property
@@ -166,8 +165,8 @@ class ConnectionGraph:
         from_p = attrs["from_port"]
         to_p = attrs["to_port"]
         color = attrs.get("color", "black")
-        from_s = from_node.port_to_dot(external_name + "_" + from_name, from_p, ConnectionGraph.STOCK)
-        to_s = to_node.port_to_dot(external_name + "_" + to_name, to_p, ConnectionGraph.SOURCE)
+        from_s = from_node.port_to_dot(external_name + "_" + from_name, from_p, keys.STOCK)
+        to_s = to_node.port_to_dot(external_name + "_" + to_name, to_p, keys.SOURCE)
         return pattern % (from_s, to_s, color)
     else:
       def edge_dot(from_node, from_name, to_node, to_name, attrs):
@@ -233,9 +232,9 @@ class TrivialConnectionGraph(ConnectionGraph):
 
 # Support class defenition
 class SourceBlock(BlockBase):
-  _name = ConnectionGraph.SOURCE
-  _block_type = ConnectionGraph.SOURCE
-  _block_group = ConnectionGraph.SOURCE
+  _name = keys.SOURCE
+  _block_type = keys.SOURCE
+  _block_group = keys.SOURCE
 
   def __init__(self, outputs):
     self._outputs = set(outputs)
@@ -251,9 +250,9 @@ class SourceBlock(BlockBase):
     return pattern % ("source", external_name, label)
 
 class StockBlock(BlockBase):
-  _name = ConnectionGraph.STOCK
-  _block_type = ConnectionGraph.STOCK
-  _block_group = ConnectionGraph.STOCK
+  _name = keys.STOCK
+  _block_type = keys.STOCK
+  _block_group = keys.STOCK
 
   def __init__(self, inputs):
     self._inputs = set(inputs)

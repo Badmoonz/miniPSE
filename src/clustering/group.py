@@ -78,14 +78,14 @@ class Group(object):
     outs = map(lambda (s, e, v, edge): "_".join(["to", e, edge["to_port"]]), out_edges)
     for s, e, v, edge in out_edges:
       G.add_edge(s, edge["from_port"],
-                 ConnectionGraph.STOCK,"_".join(["to", e, edge["to_port"]]))
+                 keys.STOCK,"_".join(["to", e, edge["to_port"]]))
     # add_stock in the end, because otherwise networkx rewrite stock node
     G.add_stock(outs)
 
     # Process ins
     ins = map(lambda (s, e, v, edge): "_".join(["from", s, edge["from_port"]]), in_edges)
     for s, e, v, edge in in_edges:
-      G.add_edge(ConnectionGraph.SOURCE, "_".join(["from", s, edge["from_port"]]),
+      G.add_edge(keys.SOURCE, "_".join(["from", s, edge["from_port"]]),
                  e, edge["to_port"])    
     G.add_source(ins)
     return composite

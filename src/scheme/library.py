@@ -4,6 +4,7 @@
 
 import atomic
 import composite
+import genericcomposite
 import os
 import os.path as osp
 
@@ -63,7 +64,7 @@ def __add_block(path, constr, into = __library, lib_prefix = "", verbose = False
       print "Block %s%s has been loaded." % (lib_prefix, repr(block))
 
 def import_composite(path, into = __library, lib_prefix = "", verbose = False):
-  __add_block(path, lambda p: composite.Composite(p), into, lib_prefix, verbose)
+  __add_block(path, lambda p: genericcomposite.GComposite(p), into, lib_prefix, verbose)
 
 def import_atomic(path, into = __library, lib_prefix = "", verbose = False):
   __add_block(path, lambda p: atomic.Atomic(p), into, lib_prefix, verbose)

@@ -3,7 +3,12 @@
 # Copyright (C) Datadvance, 2013
 
 import networkx as nx
+import keys
+from utils import WorkVariant
+
 from sets import ImmutableSet as iset
+
+
 
 def split_ports(s):
   if not s:
@@ -13,7 +18,6 @@ def split_ports(s):
 class FA:
   _G = None
   _file_path = ""
-  INITIAL = "initial"
 
   def __init__(self, path):
     self._G = nx.read_dot(path)
@@ -47,12 +51,12 @@ class FA:
     pass
 
   def to_dot(self):
-    node_pattern = "  %s [color=%s];\n"
-    edge_pattern = "  %s -> %s [label=\"[%s] &rArr; [%s]\"];\n"
-    dot_pattern = "digraph %s {\n rankdir=LR;\n%s\n}"
+    node_pattern = """  "%s" [color=%s];\n"""
+    edge_pattern = """  "%s" -> "%s" [label=\"[%s] &rArr; [%s]\"];\n"""
+    dot_pattern = """digraph %s {\n rankdir=LR;\n%s\n}"""
     body = ""
     for n in self.nodes:
-      body += node_pattern % (n, "green" if n == FA.INITIAL else "black")
+      body += node_pattern % (n, "green" if n == keys.INITIAL else "black")
 
     for s in self.edges:
       for e in self.edges[s]:
@@ -79,7 +83,7 @@ class FA:
     for next_state in self.edge[state]:
       for variant in self.edge[state][next_state].values():
         if inputs.issuperset(variant['inputs']):
-          variants.add((variant['inputs'], variant['outputs'], next_state))
+          variants.add(WorkVariant(variant['inputs'], variant['outputs'], next_state))
     return variants
 
   @property
@@ -121,7 +125,7 @@ class FA:
 class TrivialFA(FA):
   def __init__(self, inputs, outputs):
     self._G = nx.MultiDiGraph()
-    self._G.add_node("initial")
+    # self._G.add_node("initial")
 
     self._G.graph["graph"] = dict()
     self.properties["inputs"] = inputs

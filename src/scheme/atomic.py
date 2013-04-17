@@ -3,7 +3,7 @@
 # Copyright (C) Datadvance, 2013
 
 from blockbase import BlockBase
-from blockbase import split_by_comma
+from utils import split_by_comma
 import connection
 import fa
 

@@ -3,11 +3,14 @@
 # Copyright (C) Datadvance, 2013
 
 from blockbase import BlockBase
-from blockbase import split_by_comma
+from utils import split_by_comma
 
 import connection
 from fa import FA
 from fa import TrivialFA
+
+import keys
+
 
 from sets import ImmutableSet as iset
 import networkx as nx
@@ -31,6 +34,8 @@ class Composite(BlockBase):
     self._outputs = self._connection_graph.outputs
     if "block_groups" in self._connection_graph.properties:
       self._block_groups = split_by_comma(self._connection_graph.properties["block_groups"])
+
+    self._initial_state = str(dict((x, keys.INITIAL) for x in self._connection_graph.node))
 
   def _load_fa(self, path):
     path_fa = (path if path else self.file_path) + ".fa"
@@ -56,7 +61,11 @@ class Composite(BlockBase):
       return self._calc_fa(state, inputs)
 
   def _calc_fa(self, state, inputs):
+    G = self._fa_graph.G
+    w = Workflow(self)
+    result = w.work(state, inputs)
     return iset()
+
 
   def show(self):
     self.show_connection_graph()
@@ -75,12 +84,20 @@ class Composite(BlockBase):
   def has_path(self, src_block, dst_block):
     return nx.has_path(self._connection_graph,  src_block, dst_block)
 
-  def connected_ports(self, block):
+  def connected_inputs(self, block):
     G = self._connection_graph
     result = []
     in_edges = G.in_edges(block, data = True)
     for e in in_edges:
-      result.append(ports_set(e[2]))
+      result.append(ports_set(e[2])[1])
+    return iset(result)
+
+  def connected_outputs(self, block):
+    G = self._connection_graph
+    result = []
+    out_edges = G.out_edges(block, data = True)
+    for e in out_edges:
+      result.append(ports_set(e[2])[0])
     return iset(result)
 
   def edges_from_block(self, block):
@@ -104,7 +121,7 @@ class Composite(BlockBase):
     result = []
     out_edges = G.out_edges(block, data = True)
     for e in out_edges:
-      if e[2]['to_port'] == port:
+      if e[2]['from_port'] == port:
         result.append((e[0], e[1], ports_set(e[2])))
     return result
 
@@ -113,6 +130,6 @@ class Composite(BlockBase):
     result = []
     in_edges = G.in_edges(block, data = True)
     for e in in_edges:
-      if e[2]['from_port'] == port:
+      if e[2]['to_port'] == port:
         result.append((e[0], e[1], ports_set(e[2])))
     return result

@@ -2,17 +2,17 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
+import keys
+
 from sets import ImmutableSet as iset
 
-# Useful function
-def split_by_comma(xs):
-  return map(lambda x: x.strip(), xs.split(","))
 
 class BlockBase(object):
   # Property section
   _name = ""
   _file_path = ""
   _block_type = "incomplite"
+  _initial = keys.INITIAL
   _is_composite = False
   _block_groups = list()
   
@@ -47,6 +47,10 @@ class BlockBase(object):
   def connection_graph(self):
     return self._connection_graph
   
+  @property
+  def initial_state(self):
+    return self._initial_state
+
   @property
   def fa_graph(self):
     return self._fa_graph
