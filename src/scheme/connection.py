@@ -7,7 +7,7 @@
 import library
 import networkx as nx
 from blockbase import BlockBase
-from block_base import split_by_comma
+from blockbase import split_by_comma
 from sets import ImmutableSet as iset
 
 def ports_dot(ports):
