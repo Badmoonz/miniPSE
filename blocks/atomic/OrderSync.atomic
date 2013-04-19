@@ -1,8 +1,8 @@
 digraph OrderSync {
   inputs = "x1, x2";
-  outputs = "y1, y1";
+  outputs = "y1, y2";
   
-  initial -> pass_x2 [inputs="x1", outputs="y1"];
-  pass_x2 -> initial [inputs="x2", outputs="y2"];
+  initial -> pass_x2[inputs="x1", outputs="y1"];
+  pass_x2 -> initial[inputs="x2", outputs="y2"];
 
 }

@@ -5,11 +5,12 @@
 
 
 # from composite import Composite
-import keys
 
 from composite import Composite
+import fa
+import connection
 
-from utils import ports_set, edge_str, composite_state
+from utils import ports_set, edge_str
 from utils import RaceCondition, SurplusWave
 from utils import WorkVariant
 
@@ -19,7 +20,6 @@ from sets import ImmutableSet as iset
 from tempfile import NamedTemporaryFile
 import os
 from collections import namedtuple
-from itertools import combinations
 
 class Workflow(object):
   def __init__(self, composite):
@@ -27,18 +27,18 @@ class Workflow(object):
     self._clear()
  
 
-  def work(self, state = None, inputs = None):
+  def work(self, state=None, inputs=None):
     self.init_composite(state, inputs)
     while self._active_states:
       self._step()
     return self._final_states()
 
 
-  def init_composite(self, state = None, inputs = None):
+  def init_composite(self, state=None, inputs=None):
     self._clear()
     self._source_ports = inputs or self._composite.inputs
     self._add_new_state(None, WorkflowState(self._composite, inputs, state))
-    self.show_active_states()
+    # self.show_active_states()
 
 
   def show_active_states(self):
@@ -96,7 +96,7 @@ class Workflow(object):
     self._active_states = []
     for current_state in active_states:
       [self._add_new_state(current_state, new_state) for new_state in current_state.generate_states()]
-    self.show_active_states()
+    # self.show_active_states()
 
 
   def _add_new_state(self, current_state, new_state):
@@ -121,7 +121,7 @@ class Workflow(object):
     for final_subgroup in final_states:
       for node in final_subgroup:
         for wave in node.wave_front_rich:
-          if wave.dst_block != keys.STOCK:
+          if wave.dst_block != connection.STOCK:
             raise SurplusWave, "Filthy wave `%s`!"%(wave)
 
   def _final_states(self):
@@ -131,7 +131,7 @@ class Workflow(object):
     for final_subgroup in final_states:
       for node in final_subgroup:
           outputs = [w.dst_port for w in node.wave_front_rich]
-          result.add(WorkVariant(iset(self._source_ports), iset(outputs), composite_state(node.block_state)))
+          result.add(WorkVariant(iset(self._source_ports), iset(outputs), str(node.block_state)))
     return result
 
   def _clear(self):
@@ -186,6 +186,8 @@ class WorkflowState(object):
 
   def generate_states(self):
     self._dst_map = self._wavefront_dst_map()
+    print self._dst_map, "\n#####\n"
+    print self.block_state
     self._src_map = self._wavefront_src_map()
     blocks_to_launch = set()
     for dst_block in self._dst_map:
@@ -236,7 +238,6 @@ class WorkflowState(object):
             new_state._wave_front.add(Wave(e, new_spliting))     
             j+=1       
           new_state._block_states[dst_block] = new_block_state
-          print "new_state", new_state._key()
           yield new_state
 
 
@@ -261,7 +262,7 @@ class WorkflowState(object):
     pre_state = self._block_history[block][port].state
     pre_split = self._block_history[block][port].split
     if not split.is_expanded_from(pre_split):
-      raise RaceCondition, "Race condition on block `%s` port `%s`"%(block, pre_wave.dst_port)  
+      raise RaceCondition, "Race condition on block `%s` port `%s`"%(block, port)
     if self._block_work(block, pre_state, set(port)) and not pre_split.is_ahead(split):
       raise RaceCondition, "Race condition on block `%s` state `%s` "%(block, pre_state) 
     else:
@@ -300,11 +301,11 @@ class WorkflowState(object):
     #  set initial wavefront
     init_esges = []
     if initial_inputs:
-      if initial_inputs.difference(self._composite.connected_outputs(keys.SOURCE)):
-        raise Exception, "Unknown sorce inputs %s" % initial_inputs.difference(self._composite.connected_outputs(keys.SOURCE))
-      init_edges = reduce(lambda x,y: x.union(self._composite.edges_from_port(keys.SOURCE, y)), initial_inputs, set()) 
+      if initial_inputs.difference(self._composite.connected_outputs(connection.SOURCE)):
+        raise Exception, "Unknown sorce inputs %s" % initial_inputs.difference(self._composite.connected_outputs(connection.SOURCE))
+      init_edges = reduce(lambda x,y: x.union(self._composite.edges_from_port(connection.SOURCE, y)), initial_inputs, set())
     else:
-      init_edges = set(self._composite.edges_from_block(keys.SOURCE))
+      init_edges = set(self._composite.edges_from_block(connection.SOURCE))
     self._wave_front = set([Wave(e) for e in init_edges])
 
 
@@ -334,7 +335,7 @@ class WorkflowState(object):
 
  
   def __str__(self):
-    block_states = dict([(k,v) for k,v in self._block_states.items() if v != keys.INITIAL])
+    block_states = dict([(k,v) for k,v in self._block_states.items() if v != fa.INITIAL])
     return str(block_states or "Initial")
 
 

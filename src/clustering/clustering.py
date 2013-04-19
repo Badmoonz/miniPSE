@@ -2,7 +2,7 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-from ..scheme import Composite
+from scheme import Composite
 from group import Group
 from copy import deepcopy
 
@@ -51,5 +51,5 @@ class Clustering(Composite):
     G.remove_nodes_from(g.nodes)
 
     # GenericComposite will have the same name as Group g
-    G.node[g.name] = g.convert_to_composite()
+    G.node[g.name] = g.try_to_convert()
     return self

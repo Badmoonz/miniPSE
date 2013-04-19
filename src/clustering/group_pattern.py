@@ -4,6 +4,7 @@
 
 from ..scheme import Composite
 
+
 class Pattern(Composite):
   PATTERN = 'pattern'
   _block_type = Pattern.PATTERN

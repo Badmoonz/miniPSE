@@ -7,6 +7,7 @@ from nose.tools import *
 
 from src.scheme.workflow import Workflow
 
+
 class TestWorkflow:
   def setUp(self):
     scheme.load_all_default_libraries()
@@ -22,17 +23,17 @@ class TestWorkflow:
     w = Workflow(composite = scheme.lib['Example2'])
     w.work()
 
+  @nottest
   @raises(RaceCondition)
   def test_run_example3(self):
     w = Workflow(composite = scheme.lib['Example3'])
     w.work()
 
-  
   def test_run_example4(self):
     w = Workflow(composite = scheme.lib['Example4'])
     w.work()
 
-  
+
   def test_run_example5(self):
     w = Workflow(composite = scheme.lib['Example5'])
     w.work()
@@ -42,6 +43,7 @@ class TestWorkflow:
     w = Workflow(composite = scheme.lib['Example6'])
     w.work()
 
+  @nottest
   def test_example2_fa(self):
     c = scheme.lib['Example2']
-    c._full_calc_fa()
+    c._calc_fa()

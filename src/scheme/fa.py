@@ -3,19 +3,13 @@
 # Copyright (C) Datadvance, 2013
 
 import networkx as nx
-import keys
+from utils import split_ports
 from utils import WorkVariant
 
-from sets import ImmutableSet as iset
-
-
-
-def split_ports(s):
-  if not s:
-    return iset()
-  return iset(map(lambda p: p.strip(), s.split(",")))
+INITIAL = "initial"
 
 class FA:
+
   _G = None
   _file_path = ""
 
@@ -56,7 +50,7 @@ class FA:
     dot_pattern = """digraph %s {\n rankdir=LR;\n%s\n}"""
     body = ""
     for n in self.nodes:
-      body += node_pattern % (n, "green" if n == keys.INITIAL else "black")
+      body += node_pattern % (n, "green" if n == INITIAL else "black")
 
     for s in self.edges:
       for e in self.edges[s]:
@@ -122,10 +116,11 @@ class FA:
   def outputs(self):
     return self.properties['outputs']
 
+
 class TrivialFA(FA):
-  def __init__(self, inputs, outputs):
+  def __init__(self, initial, inputs, outputs):
     self._G = nx.MultiDiGraph()
-    # self._G.add_node("initial")
+    self._G.add_node(initial)
 
     self._G.graph["graph"] = dict()
     self.properties["inputs"] = inputs

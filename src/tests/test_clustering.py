@@ -18,12 +18,11 @@ class TestClustering:
   def tearDown(self):
     scheme.clear_library()
 
-  @nottest
   def test_group(self):
     ex = scheme.lib["Example4"]
     g = Group(ex)
     g.add_nodes(["map2", "f"])
-    g.convert_to_composite()
+    g.try_to_convert()
 
   @nottest
   def test_clustering(self):

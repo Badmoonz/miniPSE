@@ -2,8 +2,7 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-import keys
-
+import fa
 from sets import ImmutableSet as iset
 
 
@@ -12,7 +11,7 @@ class BlockBase(object):
   _name = ""
   _file_path = ""
   _block_type = "incomplite"
-  _initial = keys.INITIAL
+  _initial_state = fa.INITIAL
   _is_composite = False
   _block_groups = list()
   
@@ -72,11 +71,15 @@ class BlockBase(object):
   def load(self, path):
     self._load_fa(path)
     self._load_connection_graph(path)
+    self._set_data_from_graphs()
     
   def _load_connection_graph(self, path):
     pass
     
   def _load_fa(self, path):
+    pass
+
+  def _set_data_from_graphs(self):
     pass
 
   # Save section
@@ -101,7 +104,10 @@ class BlockBase(object):
     
   # Main method
   def work(self, state, inputs):
-    raise Exception, "Work of incomplite block!"
+    if self.fa_graph:
+      return self._fa_graph.variants(state, inputs)
+    else:
+      raise Exception, 'No FA defined'
 
   # Sugar section
   def show(self):

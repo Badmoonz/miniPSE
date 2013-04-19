@@ -1,6 +1,6 @@
 digraph WallSync {
   inputs = "x1, x2";
-  outputs = "y1, y1";
+  outputs = "y1, y2";
   
-  initial -> initial [inputs="x1, x2", outputs="y1, y2"];
+  initial -> initial[inputs="x1, x2", outputs="y1, y2"];
 }
