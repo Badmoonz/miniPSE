@@ -32,7 +32,7 @@ class ConnectionGraph:
     if not path is None:
       self._file_path = path
       self._G = nx.read_dot(path)
-      self.__transform()
+      self._transform()
   
   def _transform(self):
     self._inputs = split_ports(self.properties["inputs"])
@@ -254,9 +254,9 @@ class StockBlock(BlockBase):
     self._inputs = set(inputs)
     self._connection_graph = TrivialConnectionGraph(inputs, [])
   
-  def port_to_dot(self, external_name, port, direction):
+  def port_to_dot(self, external_name, port, _):
     name = external_name if external_name else self.name
-    return "%s:%s" % (external_name, port)
+    return "%s:%s" % (name, port)
   
   def work(self, state, inputs):
     return set()

@@ -2,7 +2,8 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-from scheme import Composite
+from ..scheme import Composite
+
 from group import Group
 from copy import deepcopy
 

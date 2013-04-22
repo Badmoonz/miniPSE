@@ -22,8 +22,6 @@ class Composite(BlockBase):
   _is_composite = True
   _nfa_graph = None
 
-
-
   def _load_connection_graph(self, path):
     self._connection_graph = connection.ConnectionGraph(path)
     self._name = self._connection_graph.name
@@ -41,8 +39,8 @@ class Composite(BlockBase):
       self._fa_graph = FA(path_fa)
       self._nfa_graph = FA(path_nfa)
     else:
-      self._fa_graph = TrivialFA(self.inputs, self.outputs)
-      self._nfa_graph = TrivialFA(self.inputs, self.outputs)
+      self._fa_graph = TrivialFA("initial", self.inputs, self.outputs)
+      self._nfa_graph = TrivialFA("initial", self.inputs, self.outputs)
 
   def work(self, state, inputs):
     if not state in self._fa_graph.nodes:
