@@ -25,6 +25,7 @@ class TestClustering:
 
     g = Group(ex)
     g.add_nodes(["map2", "f"])
+    g.convert_to_composite()
 
     clustered = Clustering(ex)
     clustered.aggregate_group(g, "Group1")

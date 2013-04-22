@@ -21,6 +21,8 @@ class Atomic(BlockBase):
     self._outputs = self._fa_graph.outputs
     if "block_groups" in self._fa_graph.properties:
       self._block_groups = set(split_by_comma(self._fa_graph.properties["block_groups"]))
+    else:
+      self._block_groups = set()
 
   def _load_connection_graph(self, path):
     self._connection_graph = connection.TrivialConnectionGraph(self.inputs, self.outputs)

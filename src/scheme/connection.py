@@ -41,6 +41,8 @@ class ConnectionGraph:
       self._G = nx.read_dot(path)
       self._transform()
       self.validate()
+    else:
+      self._G = nx.MultiDiGraph()
   
   def _transform(self):
     self._inputs = split_ports(self.properties["inputs"])

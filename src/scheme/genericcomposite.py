@@ -23,6 +23,7 @@ class GenericComposite(Composite):
     else:
       self._connection_graph = ConnectionGraph()
       self._name = name if name else ("generic" + str(_get_name_index()))
+      self._connection_graph.graph["name"] = self.name
       self._block_group = group if group else GenericComposite.GENERIC
 
   def load(self, path):

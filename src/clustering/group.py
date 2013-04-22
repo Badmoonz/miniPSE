@@ -52,9 +52,6 @@ class Group(object):
     G = composite.connection_graph
     fromG = self._composite.connection_graph
 
-    for n in fromG.node:
-      print fromG.node[n].connection_graph
-
     for s in fromG.edges:
       for e in fromG.edges[s]:
         for v in fromG.edges[s][e]:
@@ -78,7 +75,7 @@ class Group(object):
     outs = map(lambda (s, e, v, edge): "_".join(["to", e, edge["to_port"]]), out_edges)
     for s, e, v, edge in out_edges:
       G.add_edge(s, edge["from_port"],
-                 ConnectionGraph.STOCK,"_".join(["to", e, edge["to_port"]]))
+                 ConnectionGraph.STOCK, "_".join(["to", e, edge["to_port"]]))
     # add_stock in the end, because otherwise networkx rewrite stock node
     G.add_stock(outs)
 
