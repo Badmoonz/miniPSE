@@ -32,16 +32,15 @@ class ConnectionGraph:
     if not path is None:
       self._file_path = path
       self._G = nx.read_dot(path)
-      self.__transform()
-
+      self._transform()
   
-  def __transform(self):
+  def _transform(self):
     self._inputs = split_ports(self.properties["inputs"])
     self._outputs = split_ports(self.properties["outputs"])
-    self.__transform_nodes()
-    self.__transform_eadges()
+    self._transform_nodes()
+    self._transform_eadges()
   
-  def __transform_nodes(self):
+  def _transform_nodes(self):
     for node in self.nodes:
       if not (node == SOURCE or  node == STOCK):
         self.nodes[node] = library.get_block(self.nodes[node]["block_type"])
@@ -50,7 +49,7 @@ class ConnectionGraph:
       elif node == STOCK:
         self.add_stock(self.outputs)
    
-  def __transform_eadges(self):
+  def _transform_eadges(self):
     for s in self.edges:
       for e in self.edges[s]:
         for v in self.edges[s][e]:
@@ -58,18 +57,18 @@ class ConnectionGraph:
           edge['from_port'] = edge.pop('tailport')
           edge['to_port'] = edge.pop('headport')
     
-  def __validate(self):
+  def validate(self):
     for src in self.edges:
       for dest in self.edges[src]:
         for variant in self.edges[src][dest]:
           edge = self.edge[src][dest][variant]
-          self.__check_block_port(src, edge['from_port'], 'outputs')
-          self.__check_block_port(dest, edge['to_port'], 'inputs')
+          self._check_block_port(src, edge['from_port'], 'outputs')
+          self._check_block_port(dest, edge['to_port'], 'inputs')
     self_loops = self._G.selfloop_edges()
     if self_loops:
       raise Exception, "Self loops detected! %s" % (self_loops)
 
-  def __check_block_port(self, block, port_name, direction):
+  def _check_block_port(self, block, port_name, direction):
     """
     direction = 'inputs' or 'outputs'
     """
@@ -117,6 +116,8 @@ class ConnectionGraph:
     return self._outputs
 
   def add_edge(self, from_b, from_p, to_b, to_p):
+    #self._check_block_port(from_b, from_p, "outputs")
+    #self._check_block_port(to_b, to_p, "inputs")
     self._G.add_edge(from_b, to_b,
                      from_port=from_p, to_port=to_p)
   
@@ -197,6 +198,7 @@ class ConnectionGraph:
     dot += ender()
     return dot
 
+
 class TrivialConnectionGraph(ConnectionGraph):
   def __init__(self, inputs, outputs):
     self._inputs = inputs
@@ -253,9 +255,9 @@ class StockBlock(BlockBase):
     self._inputs = set(inputs)
     self._connection_graph = TrivialConnectionGraph(inputs, [])
   
-  def port_to_dot(self, external_name, port, direction):
+  def port_to_dot(self, external_name, port, _):
     name = external_name if external_name else self.name
-    return "%s:%s" % (external_name, port)
+    return "%s:%s" % (name, port)
   
   def work(self, state, inputs):
     return set()

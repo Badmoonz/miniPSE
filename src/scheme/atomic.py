@@ -22,9 +22,9 @@ class Atomic(BlockBase):
     self._inputs = self.fa_graph.inputs
     self._outputs = self.fa_graph.outputs
     if "block_groups" in self._fa_graph.properties:
-      self._block_groups = split_by_comma(self._fa_graph.properties["block_groups"])
-
-
+      self._block_groups = set(split_by_comma(self._fa_graph.properties["block_groups"]))
+    else:
+      self._block_groups = set()
 
   def __repr__(self):
     return "[%s]" % self.name

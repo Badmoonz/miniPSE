@@ -5,6 +5,9 @@
 import fa
 from sets import ImmutableSet as iset
 
+# Useful function
+def split_by_comma(xs):
+  return map(lambda x: x.strip(), xs.split(",")) if xs else list()
 
 class BlockBase(object):
   # Property section
@@ -35,8 +38,8 @@ class BlockBase(object):
     return self._block_type
 
   @property
-  def block_group(self):
-    return self._block_group
+  def block_groups(self):
+    return self._block_groups
 
   @property
   def is_composite(self):

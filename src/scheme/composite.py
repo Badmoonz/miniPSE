@@ -22,8 +22,6 @@ class Composite(BlockBase):
   _is_composite = True
   _nfa_graph = None
 
-
-
   def _load_connection_graph(self, path):
     self._connection_graph = connection.ConnectionGraph(path)
 
@@ -37,6 +35,35 @@ class Composite(BlockBase):
     # else:
     #   self._fa_graph = TrivialFA(pure_block_states(self.initial_state), self.inputs, self.outputs)
     #   self._nfa_graph = TrivialFA(self.initial_state, self.inputs, self.outputs)
+
+  def _set_data_from_graphs(self):
+     self._name = self.connection_graph.name
+     self._inputs = self.connection_graph.inputs
+     self._outputs = self.connection_graph.outputs
+     if "block_groups" in self._connection_graph.properties:
+        self._block_groups = split_by_comma(self._connection_graph.properties["block_groups"])
+
+     self._initial_state = str(dict((x, fa.INITIAL) for x in self._connection_graph.node))
+
+     self._fa_graph = TrivialFA(pure_block_states(self.initial_state), self.inputs, self.outputs)
+     self._nfa_graph = TrivialFA(self.initial_state, self.inputs, self.outputs)
+
+
+  def _calc_fa(self):
+    raise Exception, "Virtual!"
+
+  def work(self, state, inputs):
+    if not state in self._fa_graph.nodes:
+      raise Exception, "Bad state %s for FA %s!" % (state, self.name)
+    elif len(self._fa_graph.G.out_edges(state)):
+      variants = set()
+      for neig in self._fa_graph.G.neighbors(state):
+        for v in self._fa_graph.edges[state][neig]:
+          edge = self._fa_graph.edges[state][neig][v]
+          if edge["inputs"].issubset(inputs):
+            variants.add(edge["inputs"], edge["outputs"], neig)
+    else:
+      return self._calc_fa(state, inputs)
 
   def _set_data_from_graphs(self):
      self._name = self.connection_graph.name

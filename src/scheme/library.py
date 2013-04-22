@@ -56,10 +56,7 @@ def import_library(path, into = __library, lib_prefix = "", verbose = False):
 
 
 def __add_block(path, constr, into = __library, lib_prefix = "", verbose = False):
-  try:
-    block = constr(path)
-  except Exception as e:
-    raise Exception, "Fail to load %s: %s" % (path, e)
+  block = constr(path)
   
   if into.has_key(block.name):
     raise Exception("Block %s%s has name has already been imported!" % (lib_prefix, block.name))

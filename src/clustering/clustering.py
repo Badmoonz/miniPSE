@@ -2,7 +2,7 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-from scheme import Composite
+from ..scheme import Composite
 from group import Group
 from copy import deepcopy
 
@@ -15,6 +15,9 @@ class Clustering(Composite):
     self._name = "Clustered_" + workflow.name
 
   def load(self, path):
+    raise NotImplementedError, "This method does not impliment yet!"
+
+  def save(self, path=None):
     raise NotImplementedError, "This method does not impliment yet!"
 
   def __repr__(self):

@@ -1,5 +1,6 @@
 digraph Tube {
   inputs = "x";
   outputs = "y";
+  block_groups = "functional, pure";
   initial -> initial [inputs="x", outputs="y"];
 }

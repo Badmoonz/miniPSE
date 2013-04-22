@@ -1,6 +1,7 @@
 digraph Example4 {
   inputs = "xs";
   outputs = "fs";
+  block_groups = "functional, pure"
 
   f[block_type="F"];
   map[block_type="Map"];
