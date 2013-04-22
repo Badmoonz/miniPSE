@@ -3,7 +3,8 @@
 # Copyright (C) Datadvance, 2013
 
 from ..scheme import GenericComposite
-from ..scheme import ConnectionGraph
+from ..scheme import GComposite
+from ..scheme import connection
 
 # Dirty hack
 __name_index = 0
@@ -12,19 +13,20 @@ def _get_name_index():
   __name_index += 1
   return __name_index
 
+
 class Group(object):
-  _composite = None
+  _source_composite = None
   _nodes = set()
   _name = ""
 
-  def __init__(self, composite, name=None):
-    self._composite = composite
+  def __init__(self, source_composite, name=None):
+    self._source_composite = source_composite
     self._nodes = set()
-    self._name = name if name else ("group" + str(_get_name_index()))
+    self._name = name
 
   def add_node(self, node):
-    if not node in self._composite.connection_graph.nodes:
-      raise Exception, "There is not block %s in composite %s!" % (node, self._composite)
+    if not node in self._source_composite.connection_graph.nodes:
+      raise Exception, "There is not block %s in composite %s!" % (node, self._source_composite)
     else:
       self._nodes.add(node)
 
@@ -45,12 +47,14 @@ class Group(object):
   def get_group_port_name(self, block, port, direction):
     return "_".join([direction, block, port])
 
-  def convert_to_composite(self, composite_name = None):
+  def try_to_convert(self):
     in_edges = list()
     out_edges = list()
-    composite = GenericComposite(name=(composite_name if composite_name else self.name))
-    G = composite.connection_graph
-    fromG = self._composite.connection_graph
+    gcomposite = GComposite(name=self.name)
+    G = gcomposite.connection_graph
+    fromG = self._source_composite.connection_graph
+    # for n in fromG.nodes:
+    #   print fromG.node[n].connection_graph
 
     for s in fromG.edges:
       for e in fromG.edges[s]:
@@ -82,7 +86,10 @@ class Group(object):
     # Process ins
     ins = map(lambda (s, e, v, edge): "_".join(["from", s, edge["from_port"]]), in_edges)
     for s, e, v, edge in in_edges:
-      G.add_edge(ConnectionGraph.SOURCE, "_".join(["from", s, edge["from_port"]]),
-                 e, edge["to_port"])    
+      G.add_edge(connection.SOURCE, "_".join(["from", s, edge["from_port"]]),
+                 e, edge["to_port"])
     G.add_source(ins)
-    return composite
+    gcomposite._set_data_from_graphs()
+    gcomposite._calc_fa()
+
+    return gcomposite

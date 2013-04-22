@@ -2,62 +2,54 @@
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
 
-import networkx as nx
+
+
+# from composite import Composite
 
 from composite import Composite
-from fa import FA
-from connection import ConnectionGraph as CG
+import fa
+import connection
 
 from utils import ports_set, edge_str
-from utils import RaceCondition
+from utils import RaceCondition, SurplusWave
+from utils import WorkVariant
 
-import copy
+import networkx as nx
 from copy import deepcopy
 from sets import ImmutableSet as iset
 from tempfile import NamedTemporaryFile
 import os
 from collections import namedtuple
-from itertools import combinations
 
 class Workflow(object):
   def __init__(self, composite):
     self._composite = composite
-    self._state_pool = []
-    self._active_states = []
-    self._step_counter = 0
-    self._flow_graph = nx.MultiDiGraph()
-    self.__add_new_state(None, WorkflowState(composite = self._composite))
-    self.show_active_states()
-    
+    self._clear()
  
-  def step(self):
-    self._step_counter += 1
-    generated_states = []
-    active_states = set(self._active_states)
-    self._active_states = []
-    for current_state in active_states:
-      [self.__add_new_state(current_state, new_state) for new_state in current_state.generate_states()]
-    self.show_active_states()
 
- 
-  def work(self):
+  def work(self, state=None, inputs=None):
+    self.init_composite(state, inputs)
     while self._active_states:
-      self.step()
-    print "End"
-    print "Pure Initial States:" 
-    print "Pure Out States:"
-    # self.show_state_graph()
+      self._step()
+    return self._final_states()
 
- 
+
+  def init_composite(self, state=None, inputs=None):
+    self._clear()
+    self._source_ports = inputs or self._composite.inputs
+    self._add_new_state(None, WorkflowState(self._composite, inputs, state))
+    # self.show_active_states()
+
+
   def show_active_states(self):
     print "STEP %s"%(self._step_counter)
     print "\n".join(map(lambda ws: str(ws.block_state) + str(ws.wave_front), self._active_states))
 
- 
+
   def show_state_pool(self):
     print "\n".join(map(lambda ws: str(ws.block_state) + str(ws.wave_front), self._state_pool))
 
- 
+
   def show_state_graph(self):
     import subprocess
     with NamedTemporaryFile(delete = False) as f:
@@ -98,7 +90,16 @@ class Workflow(object):
     return dot
 
 
-  def __add_new_state(self, current_state, new_state):
+  def _step(self):
+    self._step_counter += 1
+    active_states = set(self._active_states)
+    self._active_states = []
+    for current_state in active_states:
+      [self._add_new_state(current_state, new_state) for new_state in current_state.generate_states()]
+    # self.show_active_states()
+
+
+  def _add_new_state(self, current_state, new_state):
     if not isinstance(new_state, WorkflowState):
       raise AttributeError, "Object of `WorkflowState` expected."
     g = self._flow_graph
@@ -109,29 +110,49 @@ class Workflow(object):
         g.add_edge(current_state, new_state)
       self._state_pool.append(new_state)
       self._active_states.append(new_state)
-    else:
+    elif current_state != new_state:
       g.add_edge(current_state, new_state)
 
-  @property
-  def attracting_components(self):
-    return nx.attracting.attracting_components(self._flow_graph)
+
+  def _checked_final_states(self):
+    if self._active_states:
+      raise Exception, "Nonfinal step! There are some active states"
+    final_states = nx.attracting.attracting_components(self._flow_graph)
+    for final_subgroup in final_states:
+      for node in final_subgroup:
+        for wave in node.wave_front_rich:
+          if wave.dst_block != connection.STOCK:
+            raise SurplusWave, "Filthy wave `%s`!"%(wave)
+
+  def _final_states(self):
+    self._checked_final_states()
+    final_states = nx.attracting.attracting_components(self._flow_graph)
+    result = set()
+    for final_subgroup in final_states:
+      for node in final_subgroup:
+          outputs = [w.dst_port for w in node.wave_front_rich]
+          result.add(WorkVariant(iset(self._source_ports), iset(outputs), str(node.block_state)))
+    return result
+
+  def _clear(self):
+    self._source_ports = []
+    self._state_pool = []
+    self._active_states = []
+    self._step_counter = 0
+    self._flow_graph = nx.MultiDiGraph()
 
 
 WaveHistory = namedtuple('WaveHistory', ['state', 'split'])
 
 class WorkflowState(object):
-  def __init__(self, parent = None, composite = None):
+  def __init__(self, composite = None, initial_inputs = None, block_states = None):
     self._block_states = {}
     self._wave_front = set()
     self._composite = None
     self._block_history = {}
-    self._locked_blocks = {}
-    if parent == None and composite == None:
-      raise Exception, "Workflow cannot be initialized without parent workflow instance or composite schedule"
-    if parent:
-      self._init_from_workflowstate(parent)
-    else:
-      self._init_from_composite(composite)
+    if composite:
+      self._init_from_composite(composite, initial_inputs, block_states)
+
 
  
   @property
@@ -142,8 +163,11 @@ class WorkflowState(object):
   @property
   def wave_front(self):
     #return map(lambda w: {'edge' : w.edge, 'splitting' : w.splitting}, self._wave_front)
-    return set([str(w) for w in self._wave_front])
+    return set([w.edge for w in self._wave_front])
 
+  @property 
+  def wave_front_rich(self):
+    return self._wave_front
  
   @property
   def port_history(self):
@@ -162,13 +186,13 @@ class WorkflowState(object):
 
   def generate_states(self):
     self._dst_map = self._wavefront_dst_map()
+    print self._dst_map, "\n#####\n"
+    print self.block_state
     self._src_map = self._wavefront_src_map()
-    new_state = WorkflowState(parent = self)
     blocks_to_launch = set()
     for dst_block in self._dst_map:
       block_work_variants = self._block_work(dst_block, self.block_state[dst_block], set(self._dst_map[dst_block].keys()))
       if block_work_variants:
-        print block_work_variants
         blocks_to_launch.add((dst_block, iset(block_work_variants)))
     for state in self._evolve_state(blocks_to_launch):
       yield state
@@ -182,14 +206,12 @@ class WorkflowState(object):
     else:
       dst_block, target_variants = blocks_to_launch.pop()
       for state in self._evolve_state(blocks_to_launch):
-        print "block to fire : %s"%(dst_block)
-        print "\twork variants : %s" % (target_variants)
         for block_work_variant in target_variants: 
-          new_state = WorkflowState(parent = state)
+          new_state = deepcopy(state)
           excited_edges = []
-          out_ports = block_work_variant[1]
-          in_ports = block_work_variant[0]
-          new_block_state = block_work_variant[2]
+          out_ports = block_work_variant.outputs
+          in_ports = block_work_variant.inputs
+          new_block_state = block_work_variant.state
           if any([self._src_map.has_key(dst_block) and self._src_map[dst_block].has_key(port) for port in out_ports]):
             #yield self
             raise Exception, "Stack!"
@@ -240,12 +262,11 @@ class WorkflowState(object):
     pre_state = self._block_history[block][port].state
     pre_split = self._block_history[block][port].split
     if not split.is_expanded_from(pre_split):
-      raise RaceCondition, "Race condition on block `%s` port `%s`"%(block, pre_wave.dst_port)  
+      raise RaceCondition, "Race condition on block `%s` port `%s`"%(block, port)
     if self._block_work(block, pre_state, set(port)) and not pre_split.is_ahead(split):
       raise RaceCondition, "Race condition on block `%s` state `%s` "%(block, pre_state) 
     else:
       self._block_history[block][port] = WaveHistory(state, split) 
-    print "bh:", self._block_history
 
   def _split_history(self, block):
     result = BaseWaveSplit(init = None)
@@ -264,28 +285,28 @@ class WorkflowState(object):
     return wavefront_grouped  
 
 
-  def _init_from_composite(self, composite_block):
+  def _init_from_composite(self, composite_block, initial_inputs = None, block_states = None):
     if not isinstance(composite_block, Composite):
       raise AttributeError, "compoiste_block should be of `Composite` type"
 
     self._composite = composite_block
     # set initial block states
-    for block_name in self._composite.blocks:
-      self._block_states[block_name] = FA.INITIAL
+    self._block_states = eval(self._composite.initial_state)
+    if block_states:
+      block_states = eval(block_states)
+      if set(block_states.keys()).difference(set(self._composite.blocks)):
+        raise Exception, "Uknown blocks!"
+      self._block_states.update(block_states)
 
     #  set initial wavefront
-    init_edges = self._composite.edges_from_block(CG.SOURCE)
+    init_esges = []
+    if initial_inputs:
+      if initial_inputs.difference(self._composite.connected_outputs(connection.SOURCE)):
+        raise Exception, "Unknown sorce inputs %s" % initial_inputs.difference(self._composite.connected_outputs(connection.SOURCE))
+      init_edges = reduce(lambda x,y: x.union(self._composite.edges_from_port(connection.SOURCE, y)), initial_inputs, set())
+    else:
+      init_edges = set(self._composite.edges_from_block(connection.SOURCE))
     self._wave_front = set([Wave(e) for e in init_edges])
-
-
-  def _init_from_workflowstate(self, parent_state):   
-    if not isinstance(parent_state, WorkflowState):
-      raise AttributeError, "workflowstate should be of `WorkflowState` type"
-    #self._parent = parent_state
-    self._composite = parent_state._composite
-    self._wave_front = deepcopy(parent_state._wave_front)
-    self._block_states = deepcopy(parent_state._block_states)
-    self._block_history = deepcopy(parent_state._block_history)
 
 
   def _colored_composte(self):
@@ -300,12 +321,21 @@ class WorkflowState(object):
     return ws
 
 
+  def __deepcopy__(self, mem):
+    result =  WorkflowState()
+    result._composite = self._composite
+    result._wave_front = deepcopy(self._wave_front)
+    result._block_states = deepcopy(self._block_states)
+    result._block_history = deepcopy(self._block_history)
+    return result
+
+
   def __id__(self):
     return "WS_" + str(abs(self.__hash__()))
 
  
   def __str__(self):
-    block_states = dict([(k,v) for k,v in self._block_states.items() if v != Block.INITIAL])
+    block_states = dict([(k,v) for k,v in self._block_states.items() if v != fa.INITIAL])
     return str(block_states or "Initial")
 
 
@@ -360,6 +390,8 @@ class WaveSplit(object):
 
 
   def is_ahead(self, other):
+    if self.is_basic():
+      return True
     def is_advanced(diff, no_race):
       if isinstance(diff, DiffPair):
         return diff.fst == True or (diff.snd != True) and None

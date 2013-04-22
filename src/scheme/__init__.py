@@ -13,6 +13,7 @@ from fa import TrivialFA
 from atomic import Atomic
 
 from composite import Composite
+from gcomposite import GComposite
 from genericcomposite import GenericComposite
 
 from library import clear_library

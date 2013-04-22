@@ -4,6 +4,7 @@
 
 import atomic
 import composite
+# from gcomposite import GComposite
 import os
 import os.path as osp
 
@@ -13,19 +14,23 @@ default_library_path = {
     "atomic": osp.abspath(osp.dirname(__file__) + "../../../blocks/atomic"),
     "composite" : osp.abspath(osp.dirname(__file__) + "../../../blocks/composite"),
     "supercomposite" : osp.abspath(osp.dirname(__file__) + "../../../blocks/supercomposite")
-  }
+}
 
 default_load_order = ["atomic", "composite", "supercomposite"]
+
 
 def load_default_libraries(lib_names):
   importer = lambda lname: import_library(default_library_path[lname], verbose=True)
   map(importer, lib_names)
 
+
 def load_all_default_libraries():
   load_default_libraries(default_load_order)
 
+
 def clear_library():
   __library.clear()
+
 
 def import_library(path, into = __library, lib_prefix = "", verbose = False):
   items = os.listdir(path)
@@ -48,7 +53,8 @@ def import_library(path, into = __library, lib_prefix = "", verbose = False):
       into[item] = dict()
       import_library(item_path, into[item], lib_prefix + "." + item, verbose)
   return into
-  
+
+
 def __add_block(path, constr, into = __library, lib_prefix = "", verbose = False):
   try:
     block = constr(path)
@@ -62,12 +68,15 @@ def __add_block(path, constr, into = __library, lib_prefix = "", verbose = False
     if verbose:
       print "Block %s%s has been loaded." % (lib_prefix, repr(block))
 
+
 def import_composite(path, into = __library, lib_prefix = "", verbose = False):
   __add_block(path, lambda p: composite.Composite(p), into, lib_prefix, verbose)
 
+
 def import_atomic(path, into = __library, lib_prefix = "", verbose = False):
   __add_block(path, lambda p: atomic.Atomic(p), into, lib_prefix, verbose)
-  
+
+
 def get_block(block_name, library = __library):
   block_path = block_name.split(".")
   try:
@@ -75,6 +84,7 @@ def get_block(block_name, library = __library):
   except Exception as e:
     raise Exception("Fail while search block %s: %s" % (block_name, e.message))
   return block
+
 
 def __get_block_by_path(block_path, lib = __library):
   if not block_path:
@@ -91,9 +101,11 @@ def __get_block_by_path(block_path, lib = __library):
   else:
     raise Exception("can not find")
 
+
 def get_main_library():
   return __library
-  
+
+
 def reload_library(lib = __library, lib_prefix = "", verbose = True):
   for item in lib:
     if type(lib[item]) == dict:

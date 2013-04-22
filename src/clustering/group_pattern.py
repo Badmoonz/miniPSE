@@ -5,6 +5,7 @@
 from ..scheme import Composite
 from implicitconnection import ImplicitConnection
 
+
 class Pattern(Composite):
   PATTERN = 'pattern'
   _block_type = Pattern.PATTERN
