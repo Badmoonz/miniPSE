@@ -1,0 +1,22 @@
+digraph Example6{
+ rankdir = LR;
+subgraph cluster_Example6_comp {
+  color = blue;
+  rankdir = LR;
+  label = "Example6_comp";
+  Example6_comp_map [shape=Mrecord, label="Example6_comp_map | {{<xs> xs | <f> f} | {<x> x | <fs> fs}}"];
+  Example6_comp_stock [shape=Mrecord, label="Example6_comp_stock | {{<fs> fs}}"];
+  Example6_comp_source [shape=Mrecord, label="Example6_comp_source | {{<xs> xs}}"];
+  Example6_comp_f [shape=Mrecord, label="Example6_comp_f | {{<x> x} | {<f> f}}"];
+  Example6_comp_map:x -> Example6_comp_f:x[color = "black"];
+  Example6_comp_map:fs -> Example6_comp_stock:fs[color = "black"];
+  Example6_comp_source:xs -> Example6_comp_map:xs[color = "black"];
+  Example6_comp_f:f -> Example6_comp_map:f[color = "black"];
+}
+  Example6_stock [shape=Mrecord, label="Example6_stock | {{<fs> fs}}"];
+  Example6_source [shape=Mrecord, label="Example6_source | {{<xs> xs}}"];
+  Example6_f [shape=Mrecord, label="Example6_f | {{<x> x} | {<f> f}}"];
+  Example6_comp_stock:fs -> Example6_stock:fs[color = "black"];
+  Example6_source:xs -> Example6_f:x[color = "black"];
+  Example6_f:f -> Example6_comp_source:xs[color = "black"];
+}

@@ -123,9 +123,9 @@ class BlockBase(object):
   def show_fa(self):
     self.fa_graph.show()
 
-  def save_representation(self, path, hierarchical=False, external_name=None):
-    self._connection_graph.save_repr(path + ".cg.dot", hierarchical, external_name=self.name)
-    self._fa_graph.save_repr(path + ".fa.dot")
+  def save_representation(self, path, hierarchical=False):
+    self._connection_graph.save_repr(path + "_cg.dot", hierarchical, external_name=self.name)
+    self._fa_graph.save_repr(path + "_fa.dot")
   
   def __str__(self):
     s = repr(self)

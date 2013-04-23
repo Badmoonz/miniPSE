@@ -25,6 +25,12 @@
 \newcommand{\stock}{\text{STOCK}}
 \newcommand{\source}{\text{SOURCE}}
 
+\textheight = 720pt
+\textwidth = 500pt
+
+\hoffset = -25mm
+\voffset = -30mm
+
 \begin{document}
 
 \maketitle
@@ -57,6 +63,27 @@
 
 На рисунке \ref{map} схематично изображен блок класса \textit{Map}, для которого $inputs(Map) = \{xs, f\}$, $outputs(Map) = \{fs, x\}$.
 
+\begin{figure}[H]
+  \centering
+
+  \begin{subfigure}[b]{0.2\textwidth}
+    \centering
+    \label{map:connection}
+    \includegraphics[width=\textwidth]{map_cg.pdf}
+    \caption{Схема блока}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{0.7\textwidth}
+    \centering
+    \label{map:fa}
+    \includegraphics[width=\textwidth]{map_fa.pdf}
+    \caption{Автомат Мили блока}
+  \end{subfigure}
+  
+  \label{map}
+  \caption{Схематичное изображение блока класса \textit{Map} (a) и соответствующего ему конечного автомата Мили (b).}
+\end{figure}
+
 Основной структурой для построения схемы потока данных является составной блок.
 
 \begin{defen}
@@ -77,25 +104,27 @@ $$\hat{E}^I = \{(\source, \source^O, b, b^I) \vert (\source^O, b, b^I) \in E^I\}
 $$\hat{E}^O = \{ (b, b^O, \stock, \stock^I) \vert (b, b^O, \stock) \in E^O \}$$
 $$\hat{B} = (B \cup \{\stock, \source\}, E^B \cup \hat{E}^I \cup \hat{E}^O)$$
 
+В этом случае составной блок $\hat{B}$ описывается графом с ребрами вида $(u, u^O, v, v^I)$. На рисунке \ref{example} изображен пример составного блока.
+
 \begin{figure}[H]
   \centering
-
-  \begin{subfigure}[b]{0.2\textwidth}
+  
+  \begin{subfigure}[b]{0.3\textwidth}
     \centering
-    \label{map:connection}
-    \includegraphics[width=\textwidth]{map.pdf}
-    \caption{Схема блока}
+    \label{example:composite}
+    \includegraphics[width=\textwidth]{example_cg.pdf}
+    \caption{Составной блок}
   \end{subfigure}
   ~
-  \begin{subfigure}[b]{0.7\textwidth}
+  \begin{subfigure}[b]{1.0\textwidth}
     \centering
-    \label{map:fa}
-    \includegraphics[width=\textwidth]{map_fa.pdf}
-    \caption{Автомат Мили блока}
+    \includegraphics[width=\textwidth]{cc_cg.pdf}
+    \label{example:supercomposite}
+    \caption{Супер-составной блок}
   \end{subfigure}
   
-  \label{map}
-  \caption{Схематичное изображение блока класса \textit{Map} (a) и соответствующего ему конечного автомата Мили (b).}
+  \caption{ Примеры графов составного и супер-составного блока.}
+  \label{example}
 \end{figure}
 
 \end{document}

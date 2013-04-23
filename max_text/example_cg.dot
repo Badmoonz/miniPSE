@@ -1,0 +1,15 @@
+digraph Example1{
+  rankdir=LR;
+  Example1_map [shape=Mrecord, label="map | {{<xs> xs | <f> f} | {<fs> fs | <x> x}}"];
+  Example1_stock [shape=Mrecord, label="STOCK | {{<fs> fs}}"];
+  {
+    rank=source;
+    Example1_source [shape=Mrecord, label="SOURCE | {{<xs> xs}}"];
+  }
+  Example1_f [shape=Mrecord, label="f | {{<x> x} | {<f> f}}"];
+  
+  Example1_map:x -> Example1_f:x[color = "black"];
+  Example1_map:fs -> Example1_stock:fs[color = "black"];
+  Example1_source:xs -> Example1_map:xs[color = "black"];
+  Example1_f:f -> Example1_map:f[color = "black"];
+}
