@@ -46,7 +46,7 @@ class FA:
 
   def to_dot(self):
     node_pattern = """  "%s" [color=%s];\n"""
-    edge_pattern = """  "%s" -> "%s" [label=\"[%s] &rArr; [%s]\"];\n"""
+    edge_pattern = """  "%s" -> "%s" [label=\"[%s] / [%s]\"];\n"""
     dot_pattern = """digraph %s {\n rankdir=LR;\n%s\n}"""
     body = ""
     for n in self.nodes:

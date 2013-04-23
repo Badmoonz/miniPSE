@@ -34,8 +34,13 @@ nosetests.xml
 .project
 .pydevproject
 
-# Dot files
-*.dot
-
 # Intellij IDEA files
 .idea
+
+# Ignore LaTeX outputs
+*.aux
+*.idx
+*.log
+*.gz
+*.pdf
+

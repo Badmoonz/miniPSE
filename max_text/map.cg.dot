@@ -1,0 +1,4 @@
+digraph trivial{
+  rankdir=LR;
+  trivial [shape=Mrecord, label="trivial | {{<xs> xs | <f> f} | {<x> x | <fs> fs}}"];
+}

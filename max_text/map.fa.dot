@@ -1,0 +1,10 @@
+digraph Map {
+ rankdir=LR;
+  "initial" [color=green];
+  "non_trivial" [color=black];
+  "initial" -> "initial" [label="[xs] &rArr; [fs]"];
+  "initial" -> "non_trivial" [label="[xs] &rArr; [x]"];
+  "non_trivial" -> "initial" [label="[f] &rArr; [fs]"];
+  "non_trivial" -> "non_trivial" [label="[f] &rArr; [x]"];
+
+}
