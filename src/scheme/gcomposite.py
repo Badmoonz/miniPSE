@@ -10,15 +10,8 @@ from utils import SurplusWave
 
 from itertools import combinations
 
-<<<<<<< HEAD
-
 GENERIC = "generic"
 
-
-=======
-GENERIC = "generic"
-
->>>>>>> Clustering
 class GComposite(Composite):
   _index = 0
 

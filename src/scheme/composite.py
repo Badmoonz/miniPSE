@@ -22,19 +22,23 @@ class Composite(BlockBase):
   _is_composite = True
   _nfa_graph = None
 
+  def load(self, path):
+    self._load_connection_graph(path)
+    self._set_data_from_graphs()
+    self._load_fa(path)
+
   def _load_connection_graph(self, path):
     self._connection_graph = connection.ConnectionGraph(path)
 
   def _load_fa(self, path=None):
-    pass
-    # path_fa = (path if path else self.file_path) + ".fa"
-    # path_nfa = (path if path else self.file_path) + ".nfa"
-    # if osp.isfile(path_fa) and osp.isfile(path_nfa):
-    #   self._fa_graph = FA(path_fa)
-    #   self._nfa_graph = FA(path_nfa)
-    # else:
-    #   self._fa_graph = TrivialFA(pure_block_states(self.initial_state), self.inputs, self.outputs)
-    #   self._nfa_graph = TrivialFA(self.initial_state, self.inputs, self.outputs)
+    path_fa = (path if path else self.file_path) + ".fa"
+    path_nfa = (path if path else self.file_path) + ".nfa"
+    if osp.isfile(path_fa) and osp.isfile(path_nfa):
+       self._fa_graph = FA(path_fa)
+       self._nfa_graph = FA(path_nfa)
+    else:
+      self._fa_graph = TrivialFA(pure_block_states(self.initial_state), self.inputs, self.outputs)
+      self._nfa_graph = TrivialFA(self.initial_state, self.inputs, self.outputs)
 
   def _set_data_from_graphs(self):
      self._name = self.connection_graph.name

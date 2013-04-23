@@ -11,6 +11,11 @@ import fa
 class Atomic(BlockBase):
   _block_type = "atomic"
 
+  def load(self, path):
+    self._load_fa(path)
+    self._set_data_from_graphs()
+    self._load_connection_graph(path)
+
   def _load_fa(self, path):
     self._fa_graph = fa.FA(path)
 

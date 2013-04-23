@@ -8,7 +8,7 @@ from sets import ImmutableSet as iset
 
 
 def ports_set(edge_attrs):
-    return (edge_attrs["from_port"], edge_attrs["to_port"])
+    return edge_attrs["from_port"], edge_attrs["to_port"]
 
 
 def edge_str(edge):
