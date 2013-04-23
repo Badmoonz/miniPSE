@@ -130,7 +130,7 @@ class ConnectionGraph:
       return getattr(self._G, name)
 
 
-  def show(self, hierarchical = False, external_name = None):
+  def show(self, hierarchical=False, external_name=None):
     dot = self.to_dot(external_name, hierarchical, subgraph=False)
     import subprocess
     from tempfile import NamedTemporaryFile
@@ -140,6 +140,13 @@ class ConnectionGraph:
       f.close()
       subprocess.call(["xdot", f.name], shell = False)
     os.unlink(f.name)
+
+  def save_repr(self, path, hierarchical=False, external_name=None):
+    dot = self.to_dot(external_name, hierarchical, subgraph=False)
+    file = open(path, "w")
+    file.write(dot)
+    file.close()
+
   
   def port_to_dot(self, external_name, port, direction):
     return "%s_%s:%s" % (external_name, direction, port)

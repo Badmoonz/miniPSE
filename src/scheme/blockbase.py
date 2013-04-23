@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 # Copyright (C) Datadvance, 2013
+from networkx.classes.function import subgraph
 
 import fa
 from sets import ImmutableSet as iset
@@ -121,6 +122,10 @@ class BlockBase(object):
   
   def show_fa(self):
     self.fa_graph.show()
+
+  def save_representation(self, path, hierarchical=False, external_name=None):
+    self._connection_graph.save_repr(path + ".cg.dot", hierarchical, external_name=self.name)
+    self._fa_graph.save_repr(path + ".fa.dot")
   
   def __str__(self):
     s = repr(self)

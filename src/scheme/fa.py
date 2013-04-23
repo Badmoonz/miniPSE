@@ -70,6 +70,12 @@ class FA:
       subprocess.call(["xdot", f.name], shell = False)
     os.unlink(f.name)
 
+  def save_repr(self, path):
+    dot = self.to_dot()
+    file = open(path, "w")
+    file.write(dot)
+    file.close()
+
   def variants(self, state, inputs):
     variants = set()
     if not state in self.nodes:
