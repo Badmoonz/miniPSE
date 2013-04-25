@@ -27,7 +27,6 @@ from library import get_block
 from library import load_default_libraries
 from library import load_all_default_libraries
 
-# from workflow import WorkflowState
-# from workflow import Workflow
+from workflow import Workflow
 
 lib = get_main_library()
