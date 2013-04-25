@@ -1,0 +1,186 @@
+\documentclass[a4paper,16pt]{article}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,epsfig,epstopdf,titling,url,array}
+\usepackage[utf8x]{inputenc}
+%\usepackage[russian]{babel}
+\usepackage{listings} 
+%\usepackage[T2A]{fontenc}
+%\usepackage{amsmath,amssymb,amsthm,amscd,amsfonts,graphicx}
+\usepackage[14pt]{extsizes}
+
+\begin{document}
+\lstset{language=Python} 
+
+\section{Public Modules}
+\begin{enumerate}
+\item[•] scheme
+\item[•] clustering  (experimental)
+\item[•] tests
+\end{enumerate}
+
+
+\section{scheme Public Functions}
+\begin{lstlisting}
+  def load_all_default_libraries()
+  def reload_library()
+  def clear_library()
+\end{lstlisting}
+
+
+\section{scheme Public Members}
+
+\begin{lstlisting}
+  lib # dictionary of loaded blocks
+\end{lstlisting}
+
+\section{scheme Classes}
+\begin{enumerate}
+  \item[public:]
+    \begin{enumerate}
+      \item[•] scheme.Atomic
+      \item[•] scheme.Composite
+      \item[•] scheme.Workflow
+    \end{enumerate}
+  \item[private:]
+    \begin{enumerate}
+      \item[•] scheme.blockbase.BlockBase
+      \item[•] scheme.connection.ConnectionGraph
+      \item[•] scheme.connection.TrivialGraph(ConnectionGraph)
+      \item[•] scheme.fa.FA
+      \item[•] scheme.fa.TrivialFA(FA)
+      \item[•] scheme.workflow.WorkflowState
+      \item[•] scheme.workflow.Wave   
+      \item[•] scheme.workflow.WaveSplit   
+    \end{enumerate}
+\end{enumerate}
+
+\newpage
+
+\subsection*{BlockBase}
+\begin{lstlisting}
+class BlockBase(object):
+#public:
+  #path to dot file
+  def __init__(self, path)
+
+  # load from dot file
+  def load(self, path) 
+   
+  def validate(self) 
+
+  # calls show_fa() or show_connection_graph()
+  def show(self) 
+  
+  # show finit automata graph
+  def show_fa(self) 
+  
+  # show finit connection graph
+  def show_connection_graph(self) 
+     
+  # calculates next state and  output(s) variants
+  #                                using fa_graph         
+  def work(self, state, inputs) 
+  
+#properties (@property)
+    def name(self)  
+  
+    def file_path(self)
+
+    def block_type(self)
+
+    def is_composite(self) 
+
+    def initial_state(self)
+
+    def inputs(self)
+
+    def outputs(self)
+\end{lstlisting}
+
+\subsection*{Atiomic}
+\begin{lstlisting}
+class Atomic(BloskBase):
+# some inherited methods overriden
+  pass
+\end{lstlisting}
+
+\subsection*{Composite}
+\begin{lstlisting}
+class Composite(BloskBase):
+# some inherited methods overriden
+
+  def has_path(self, src_block, dst_block)
+
+  def connected_inputs(self, block)
+
+  def connected_outputs(self, block)
+
+  def edges_from_block(self, block)
+
+  def edges_to_block(self, block)
+
+  def edges_from_port(self, block, port)
+
+  def edges_to_port(self, block, port)
+  
+
+
+#properties (@property)
+  # return dict of blocks inside composite
+  def blocks(self)
+  
+\end{lstlisting}
+
+\subsection*{Workflow}
+\begin{lstlisting}
+class Workflow(object):
+
+ def __init__(self, composite)
+
+ # Reset states for blocks and source ports with data
+ # By default all blocks are in "initial" state 
+ #                and all source ports has data
+ def init_composite(self, state=None, inputs=None)
+
+
+ #call init_composite and start work
+ def work(self, state=None, inputs=None)
+ 
+ # show unique states produced during work
+ def show_state_pool(self)
+
+ # show connection of states
+ def show_state_graph(self)
+
+
+
+
+\end{lstlisting}
+
+
+\section{Usage Examples}
+\begin{lstlisting}
+import scheme
+from scheme.workflow import  Workflow
+scheme.load_all_default_libraries()
+
+#double Map example
+c = scheme.lib["Example4"]
+c.show()
+
+w = Workflow(c)
+w.work()
+w.show_state_graph()
+
+#race Condition expected
+c = scheme.lib["Example3"]
+c.show()
+
+w = Workflow(c)
+w.work()
+w.show_state_graph()
+
+\end{lstlisting}
+
+
+
+\end{document}}
