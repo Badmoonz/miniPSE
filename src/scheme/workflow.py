@@ -38,7 +38,7 @@ class Workflow(object):
     self._clear()
     self._source_ports = inputs or self._composite.inputs
     self._add_new_state(None, WorkflowState(self._composite, inputs, state))
-    # self.show_active_states()
+    # self.show_active_states(3)
 
 
   def show_active_states(self):
