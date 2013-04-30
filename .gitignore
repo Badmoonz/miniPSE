@@ -42,5 +42,4 @@ nosetests.xml
 *.idx
 *.log
 *.gz
-*.pdf
 
