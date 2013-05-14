@@ -1,0 +1,12 @@
+digraph G {
+  rankdir = LR;
+  free -> free [label = "(1)"];
+  free -> work [label = "(2)"];
+  
+  work -> work [label = "(3)"];
+  work -> free [label = "(4)"];
+  work -> blocked [label = "(5)"];
+  
+  blocked -> free [label = "(6)"];
+  blocked -> blocked [label = "(7)"];
+}

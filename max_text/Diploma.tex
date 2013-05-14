@@ -7,6 +7,7 @@
 \usepackage{amssymb}
 \usepackage{makeidx}
 \usepackage{graphicx}
+\usepackage{tikz}
 
 \usepackage{graphicx}
 \usepackage{caption}
@@ -255,11 +256,13 @@ $C = (\hat{B}_c = B_c \cup \{\source, \stock\}, \hat{E}_c= E_c \cup E^I_c \cup E
 \begin{defen}
   Определим некоторые вспомогательные функции.
   \begin{eqnarray*}
-    I_v(\omega) & = & \{v^I \vert (\cdot, \cdot, v, v^I) \in \omega\} \\
-    O_v(\omega) & = & \{v^O \vert (v, v^O, \cdot, \cdot) \in \omega\} \\
-    \Delta_{I, v} (\omega) & = & \{ \omega^I = \{v^I \vert \} \}
+    O_v(\omega) & = & \{v^O \vert (v, v^O, \cdot, \cdot) \in \omega\}, \\
+    I_v(\omega) & = & \{v^I \vert (\cdot, \cdot, v, v^I) \in \omega\}, \\
+    \Delta_{O, v} & = & \{(v, v^O, \cdot, \cdot) \in E_c \vert v^O \in O\}, \\
+    \Delta_{I, v} (\omega) & = & \{\tilde \omega_{I, v} \subseteq \omega \}, \; \forall \tilde \omega_I \forall v^I \in I \exists ! e \in \omega_I: e = (\cdot, \cdot, v, v^I)
   \end{eqnarray*}
 \end{defen}
+Последняя функция возвращает множество вариантов поглощения по набору входных портов $I$ блока $v$.
 
 \begin{defen}
   Фронтом $\Psi_c (\omega, s)$ активной волны $\omega = \{(u, u^O, v, v^I)\} \in \Omega_c$ в состоянии $(s = (s_{u_1}, s_{u_2}, \dots, s_{u_m}), \omega, \cdot)$
@@ -299,16 +302,17 @@ $C = (\hat{B}_c = B_c \cup \{\source, \stock\}, \hat{E}_c= E_c \cup E^I_c \cup E
       \xi^{t + 1}(v), \\
       s^{t + 1}_v = s^t_v, \\
       \omega^t_{I, v} = \omega^t_{O, v} = \varnothing
-    \end{cases} \\
+    \end{cases} \label{freetofree} \\
     % Free and can be launched => Work
   \xi^t(v) \wedge \Psi_c(\omega^t, s^t)(v) & \Rightarrow &
     \begin{cases}
       \theta^{t + 1}(v), \\
       s^{t + 1}_v = s^t_v, \\
       (\cdot, \cdot, I^t_v) \in \FA_v(s^{t}_v, I_v(\omega^t)), \\
-            
-     \pi^{t + 1}_v \in \{ (s^t_v, \cdot, \cdot, s^{t + 1}_v) \in E_v\}
-    \end{cases}
+      \pi^{t + 1}_v \in \{ (s^t_v, I^t_v, \cdot, s^{t + 1}_v) \in E_v\}, \\
+      \omega^t_{I, v} \in \Delta_{I^t_v, v}(\omega^t), \\
+      \omega^t_{O, v} = \varnothing
+    \end{cases} \label{freetostart}
 \end{eqnarray}
 
 \begin{eqnarray}
@@ -317,20 +321,24 @@ $C = (\hat{B}_c = B_c \cup \{\source, \stock\}, \hat{E}_c= E_c \cup E^I_c \cup E
    \begin{cases}
      \theta^{t + 1}(v), \\
      s^{t + 1}_v = s^t_v, \\
-     \pi^{t + 1}_v = \pi^t_v
-   \end{cases} \\
+     \pi^{t + 1}_v = \pi^t_v, \\
+     \omega^t_{I, v} = \omega^t_{O, v} = \varnothing
+   \end{cases} \label{worktowork} \\
    % Work, will finish and can be finished => Free
   \theta^t(v) \wedge \phi^t(v) \wedge \zeta^t(v) & \Rightarrow &
     \begin{cases}
       \xi^{t + 1}(v), \\
-      (s^t_v, \cdot, \omega^{t}_{O, v}, s^{t + 1}_v) = \pi^t_v
-    \end{cases} \\
+      (s^t_v, \cdot, O^t_v, s^{t + 1}_v) = \pi^t_v, \\
+      \omega^t_{O, v} = \Delta_{O^t_v, v}, \\
+      \omega^t_{I, v} = \varnothing
+    \end{cases} \label{worktofree}\\
   % Work, will finish and can not be finished => Blocked
   \theta^t(v) \wedge \phi^t(v) \wedge \neg \zeta^t(v) & \Rightarrow &
     \begin{cases}
       \chi^{t + 1}(v),\\
-      \pi^{t + 1}_v = \pi^t_v \\
-    \end{cases}
+      \pi^{t + 1}_v = \pi^t_v, \\
+      \omega^t_{O, v} = \omega^t_{I, v} = \varnothing
+    \end{cases} \label{worktoblock}
 \end{eqnarray}
 
 \begin{eqnarray}
@@ -338,15 +346,53 @@ $C = (\hat{B}_c = B_c \cup \{\source, \stock\}, \hat{E}_c= E_c \cup E^I_c \cup E
   \chi^t(v) \wedge \zeta^t(v) & \Rightarrow &
     \begin{cases}
       \xi^{t + 1}(v), \\
-      (s^t_v, \cdot, \omega^{t}_{O, v}, s^{t + 1}_v) = \pi^t_v
-    \end{cases} \\
+      (s^t_v, \cdot, O^t_v, s^{t + 1}_v) = \pi^t_v, \\
+      \omega^t_{O, v} = \Delta_{O^t_v, v}, \\
+      \omega^t_{I, v} = \varnothing
+    \end{cases} \label{blocktofree} \\
   % Blocked and can not release data => Blocked
   \chi^t(v) \wedge \neg \zeta^t(v) & \Rightarrow &
     \begin{cases}
       \chi^{t + 1}(v), \\
       s^{t + 1}_v = s^t_v, \\
-      \pi^{t + 1}_v = \pi^{t}_v
-    \end{cases}
+      \pi^{t + 1}_v = \pi^{t}_v, \\
+      \omega^t_{O, v} = \omega^t_{I, v} = \varnothing
+    \end{cases} \label{blocktoblock}
 \end{eqnarray}
 
+\begin{eqnarray}
+  \omega^{t + 1} & = & \omega^t \setminus (\cup_{v \in B_c} \omega^t_{I, v}) \cup (\cup_{v \in B_c} \omega^t_{O, v}) \label{newomega}, \\
+  s^{t + 1} & = & (s^t_{v_1}, \dots, s^t_{v_m}) \label{newstate}
+\end{eqnarray}
+
+Начальные условия:
+\begin{eqnarray}
+  \omega^0 & = & \varnothing, \\
+  s^0_v & = & s_{0, v}, \forall v \in B_c, \\
+  \theta^0 & = & \{\source\}, \\
+  \xi^0(v) & = & \{v \in B_c \vert v \neq \source\}
+\end{eqnarray}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{rules.pdf}
+    \caption{Схема работы блока}
+    \label{rules}
+\end{figure}
+
+Работу каждого блока можно схематично изобразить в виде автомата, см. рисунок \ref{rules}.
+
+Поясним эти правила. Каждое правило \eqref{freetofree} --- \eqref{blocktoblock} описывает условие перехода в конечном автомате на рисунке \ref{rules}.
+
+Правила \eqref{freetofree} и \eqref{freetostart} говорят о поведении свободного блока --- если блок может запуститься из его текущего состояния $s^t_v$
+(то есть хватает данных на портах для какого-либо перехода), то он поглощает данные $\omega^t_{I, v}$ и
+начинает некий переход $\pi^{t+1}_v$ из текущего состояния, иначе остается свободным дальше.
+
+Тройка правил \eqref{worktowork}, \eqref{worktofree} и \eqref{worktoblock} описывают поведение работающего блока $v$. Если множество $\phi^t$ не содержит рассматриваемый блок,
+он продолжает работу. Иначе, возможны два варианта: либо блок может завершиться и испустить данные $zeta^t(v)$ (то есть ребра $\Delta_{O^t_v, v}$, связанные с испускаемыми портами $O^t_v$, свободны), то блок благополучно завершает работу $\xi^{t + 1}(v)$ и испускает данные ($\omega^t_{O, v}$), либо блок переходит в состояние блокировки до момента, когда требуемые ребра освободятся, которое описывается правилами \eqref{blocktofree} и \eqref{blocktoblock}.
+
+Заметим, что мы специально различаем состояния блокировки и работы, хотя можно было бы считать, что заблокированный блок просто работает дополнительное время.
+Состояние блокировки отличается тем, что блок в этом состоянии не требует вычислительных ресурсов, что будет важно в дальнейшем.
+
+Заметим, что в правилах поведения потока данных сразу видны все неопределенности, о которых говорилось ранее --- перед запуском блока, определяется переход, который будет совершать блок, вместе с набором поглощаемых портов и ребра с которых эти данные будут поглащены. Подробнее мы будем рассматривать эти неопределенности далее.
 \end{document}
