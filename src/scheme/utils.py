@@ -44,7 +44,7 @@ def pure_block_states(val):
     return str(result)
 
 
-WorkVariant = namedtuple('WorkVariant', ['inputs', 'outputs', 'state'])
+WorkVariant = namedtuple('WorkVariant', ['inputs', 'outputs', 'state', 'probability'])
 
 
 class RaceCondition(Exception):

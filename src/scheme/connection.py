@@ -7,7 +7,8 @@
 import library
 import networkx as nx
 from blockbase import BlockBase
-from utils import split_ports, ports_dot
+from utils import split_ports, ports_dot, WorkVariant
+from sets import ImmutableSet as iset
 
 STOCK = "stock"
 SOURCE = "source"
@@ -267,7 +268,8 @@ class StockBlock(BlockBase):
     return "%s:%s" % (name, port)
   
   def work(self, state, inputs):
-    return set()
+    return [WorkVariant(iset(self.inputs), iset(),  state, 1.0)] if inputs == self.inputs else []
+    #return set()
 
   def to_dot(self, external_name, hierarchical = False, subgraph = False):
     pattern = """  {rank = %s; %s [shape=Mrecord, label="%s"];}\n"""

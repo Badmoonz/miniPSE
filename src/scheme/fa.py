@@ -27,9 +27,11 @@ class FA:
           edge = self.edges[s][e][v]
           edge["inputs"] = split_ports(edge["inputs"])
           edge["outputs"] = split_ports(edge["outputs"])
+          edge["probability"] = float(edge.get("p", 1.))
 
   def _validate(self):
     for s in self.edges:
+      prob_sum = 0.
       for e in self.edges[s]:
         for v in self.edges[s][e]:
           edge = self.edges[s][e][v]
@@ -37,6 +39,9 @@ class FA:
             "Inputs of edge %s -> %s of %s FA is bad: should be non-empty subset of %s" % (s, e, self.name, self.inputs)
           assert edge["outputs"].issubset(self.outputs),\
             "Outputs of edge %s -> %s of %s FA is bad: should be non-empty subset of %s" % (s, e, self.name, self.outputs)
+          prob_sum+=edge['probability']
+      assert prob_sum == 1. , "[%s]: Wrong probability destribution from state `%s`" % (self.name, s)    
+
 
   def save(self, path = None):
     pass
@@ -83,7 +88,7 @@ class FA:
     for next_state in self.edge[state]:
       for variant in self.edge[state][next_state].values():
         if inputs.issuperset(variant['inputs']):
-          variants.add(WorkVariant(variant['inputs'], variant['outputs'], next_state))
+          variants.add(WorkVariant(variant['inputs'], variant['outputs'], next_state, variant["probability"]))
     return variants
 
   @property
