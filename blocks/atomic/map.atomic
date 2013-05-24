@@ -3,7 +3,7 @@ digraph Map {
   outputs = "fs, x";
   block_groups = "for-like";
 
-  initial -> initial [inputs = "xs", outputs = "fs"];
+  ##initial -> initial [inputs = "xs", outputs = "fs"];
   initial -> non_trivial [inputs = "xs", outputs = "x"];
   
   non_trivial -> initial [inputs = "f", outputs = "fs"];

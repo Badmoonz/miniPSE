@@ -21,6 +21,14 @@ from tempfile import NamedTemporaryFile
 import os
 from collections import namedtuple
 
+
+
+def getID():
+  getID.count+=1
+  return getID.count
+
+getID.count = 0
+
 class Workflow(object):
   def __init__(self, composite):
     self._composite = composite
@@ -57,7 +65,9 @@ class Workflow(object):
       subprocess.call(["xdot", filepath], shell = False)
     os.unlink(f.name)
 
- 
+  def convert_flow_graph(self):
+    self._flow_graph = nx.convert_node_labels_to_integers(self._flow_graph)
+
   def save_state_graph(self, file_):
     f = None
     filepath = ""
@@ -83,8 +93,11 @@ class Workflow(object):
     for s in G.edge:
       for e in G.edge[s]:
         for v in G.edge[s][e]:
+          # dot += """  %s -> %s[label="%s"];\n""" % \
+          #         (s.__id__(), e.__id__(), ', '.join([edge_str(edge) for edge in (s.wave_front).difference(e.wave_front)]))
+
           dot += """  %s -> %s[label="%s"];\n""" % \
-                  (s.__id__(), e.__id__(), ', '.join([edge_str(edge) for edge in (s.wave_front).difference(e.wave_front)]))
+                  (s.__id__(), e.__id__(), ', '.join(["%s[%s]" % (edge[1], s.block_state[edge[1]]) for edge in (s.wave_front).difference(e.wave_front)]))
 
     dot += "}"
     return dot
