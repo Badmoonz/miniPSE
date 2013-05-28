@@ -165,7 +165,7 @@ class Workflow(object):
       for s in final_states:
         final_state = s[0]
         zero_task_name = getID("zero_task")
-        pn.add_node(zero_task_name, type = "task")
+        pn.add_node(zero_task_name, type = "task", block_name = zero_task_name, block_type = None, state = None)
         for place_id in self._get_place(outplace, (), name = "o"):
           pn.add_edge(zero_task_name, place_id,  p = 1.)
         for place_id in self._make_place(final_state, ()):
@@ -214,7 +214,7 @@ class Workflow(object):
   def _create_task_graph(self):
     tg = self._petri_net.copy()
     for n in tg.nodes():
-      if tg.node[n]['type'] == 'place':
+      if tg.node[n]['type'] == 'place' or tg.node[n]['state'] == None:
         for (i,o) in zip(tg.predecessors(n), tg.successors(n)):
           tg.add_edge(i,o)
         tg.remove_node(n)
@@ -305,12 +305,12 @@ class Workflow(object):
     edge_probabylity = G.edge[src_node][dst_node]['base']['p']
     for task in tasks:
       unique_task_name = getID("_".join(task))
-      pn.add_node(unique_task_name, type = "task")
+      pn.add_node(unique_task_name, type = "task",block_name = task[0], block_type = self._composite.blocks[task[0]].name, state = task[1])
 
       for edge in (src_node.wave_front).intersection(dst_node.wave_front):
         if edge[0] != task[0]:
           zero_task_name = getID("zero_task")
-          pn.add_node(zero_task_name, type = "task")
+          pn.add_node(zero_task_name, type = "task", block_name = zero_task_name, block_type = None, state =None)
           for place_id in self._get_place(dst_node, tuple(edge[:2])):
             pn.add_edge(zero_task_name, place_id,  p = 1.)
           for place_id in self._make_place(src_node, tuple(edge[:2])):
