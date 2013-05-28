@@ -221,14 +221,13 @@ class Workflow(object):
     places = []
     for place_id in self._place_map.get(node, []):
       if flow == pn.node[place_id].get("flow", None):
-        pn.node[place_id].setdefault("next_task", {})[task] = probability;
         places.append(place_id)
     if places:
       return places
     else:
       place_id = getID("place")
       self._place_map.setdefault(node, []).append(place_id)
-      pn.add_node(place_id, {"type" : "place", "state" : node, "flow" : flow , "next_task" : {task : probability}})
+      pn.add_node(place_id, {"type" : "place", "state" : node, "flow" : flow })
       return [place_id]
 
   def _update_place(self, old_node, new_node, flow):
@@ -287,15 +286,22 @@ class Workflow(object):
         for place_id in self._get_place(dst_node, ()):
           pn.add_edge(unique_task_name, place_id)
 
-  def decycle(self, i):
-    pn = self._petri_net
-    cycle = nx.simple_cycles(self._petri_net)[i]
+  def _full_decycle(self):
+    while(nx.simple_cycles(self._petri_net)):
+      self._decycle()
 
-    cycle2 = copy(cycle)[:-1]
+  def _decycle(self):
+    pn = self._petri_net
+    cycle = nx.simple_cycles(self._petri_net)[0]
+
+    exits = {}
     for i in cycle:
       for j in pn.edge[i]:
-        if not j in cycle2:
-            cycle2.append(j)
+        if not j in cycle:
+          exits.setdefault(j, set()).add(i)
+
+    print exits
+    cycle2 = copy(cycle)[:-1] + exits.keys()
 
     m = []
     for i in cycle2:
@@ -303,32 +309,33 @@ class Workflow(object):
     m = matrix(m)
     
     result = reduce(lambda y, i: y + m**i , range(2,200), m)
-    print cycle2
-    print m
     shortest_paths = nx.single_source_shortest_path_length(self._petri_net, 'i')
     shortest_paths = filter(lambda (k,v): k in cycle2, shortest_paths.iteritems())
     shortest_paths = sorted([(j,i) for (i,j) in iter(shortest_paths)])
     nearest_node = shortest_paths[0][1]
-    print result
-    print "sorted:" , shortest_paths
-    print "nearest_node:", nearest_node
-    return sorted(zip(cycle2, result.base[cycle2.index(nearest_node)]))
+    predessor = nx.subgraph(self._petri_net, cycle2).predecessors(nearest_node)[0]
+    result_v = result.base[cycle2.index(nearest_node)]
+    result_m = dict([(cycle2[i], result_v[i]) for i in range(len(cycle2))])
+    result =  sorted(zip(cycle2, result.base[cycle2.index(nearest_node)]))
 
 
+    loop_exit = getID("place")
+    pn.add_node(loop_exit, {"type" : "place", "state" : None, "flow" : None})
+    pn.remove_edge(predessor, nearest_node)
+    pn.add_edge(predessor, loop_exit)
+    for (t, preds) in exits.iteritems():
+      for p in preds:
+        pn.remove_edge(p, t)
+      pn.add_edge(loop_exit, t, p = result_m[t])
+    for n in cycle:
+      for i in pn.successors(n):
+        pn.edge[n][i]['p'] = 1.
+      pn.node[n]['k'] = pn.node[n].setdefault('k', 1.) * result_m[n] 
 
+    return result
 
-
-  def _cyclic_subgraph(self, i):
-    pn = self._petri_net
-    cycle = nx.simple_cycles(self._petri_net)[i]
-    cycle2 = copy(cycle)[:-1]
-    for i in cycle:
-      for j in pn.edge[i]:
-        if not j in cycle2:
-            cycle2.append(j)
-
-    return nx.subgraph(self._petri_net, cycle2)
-
+  def fork_groups(self):
+    
 
   def _merge_branches(self, source, target):
     base = []
@@ -336,19 +343,29 @@ class Workflow(object):
     allpathes = [p for p in nx.all_simple_paths(self._petri_net, source, target)]
     for p in allpathes:
       print p
+      head = None
       if not base:
-        base = p[:-1]
-        pn.remove_edge(base[-1], target)
+        base +=[source]
+        head = source
       else:
-        partition = p[1:-1]
-        pn.remove_edge(source, partition[0])
-        pn.remove_edge(partition[-1], target)
         connection_place = getID("place")
         pn.add_node(connection_place, {"type" : "place", "state" : None, "flow" : None})
-        pn.add_edge(base[-1], connection_place)
-        pn.add_edge(connection_place, partition[0])
-        base += partition
-    pn.add_edge(base[-1], target)
+        head = connection_place
+
+      partition = p[1:-1]
+      k = pn.edge[source][partition[0]]['p']
+      for n in partition:
+        if pn.node[n]['type'] == 'task':
+          pn.node[n]['k'] = pn.node[n].setdefault('k', 1.)* k
+
+      pn.remove_edge(source, partition[0])
+      pn.remove_edge(partition[-1], target)
+      if head != base[-1]:
+        pn.add_edge(base[-1], head, p = 1)
+      pn.add_edge(head, partition[0], p =1)
+      base += partition
+
+    pn.add_edge(base[-1], target, p = 1)
 
 
 
