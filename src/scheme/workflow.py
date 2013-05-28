@@ -20,6 +20,7 @@ from tempfile import NamedTemporaryFile
 import os
 
 from numpy import matrix
+import uuid
 
 from collections import namedtuple
 from compiler.ast import flatten
@@ -78,9 +79,13 @@ class Workflow(object):
 
     #os.unlink(f.name)
 
+  def show_task_graph(self):
+    import subprocess
+    with NamedTemporaryFile(delete = False) as f:
+      filepath = self.save_task_graph(f)
+      print filepath
+      subprocess.Popen(["xdot", filepath], shell = False)
 
-  def convert_flow_graph(self):
-    self._flow_graph = nx.convert_node_labels_to_integers(self._flow_graph)
 
   def save_state_graph(self, file_):
     f = None
@@ -108,6 +113,19 @@ class Workflow(object):
     f.close()
     return filepath  
 
+  def save_task_graph(self, file_):
+    f = None
+    filepath = ""
+    if isinstance(file_, str) or isinstance(file_, unicode):
+      filepath = file_ + ".dot"
+      f = open(filepath, "w")
+    else:
+      filepath = file_.name
+      f = file_.file
+    f.write(self._task_to_dot(self._create_task_graph()))
+    f.close()
+    return filepath 
+
 
   def to_dot(self):
     dot = "digraph %s {\n" % (self._composite.name)
@@ -128,17 +146,35 @@ class Workflow(object):
     dot += "}"
     return dot
 
+
+
   def petrify(self):
     G = self._flow_graph
     pn = self._petri_net
     initial_state = self._state_pool[0]
     initial_flow = tuple(list(initial_state.wave_front)[0][:2])
-    self._get_place(initial_state, initial_flow, name = "i")
+    self._make_place(initial_state, initial_flow, name = "i")
+
+    final_states = nx.attracting.attracting_components(self._flow_graph)
+    print final_states
+    if len(final_states) == 1:
+      final_state = final_states[0][0]
+      self._get_place(final_state, (), name = "o")
+    else:
+      outplace = uuid.uuid1()
+      for s in final_states:
+        final_state = s[0]
+        zero_task_name = getID("zero_task")
+        pn.add_node(zero_task_name, type = "task")
+        for place_id in self._get_place(outplace, (), name = "o"):
+          pn.add_edge(zero_task_name, place_id,  p = 1.)
+        for place_id in self._make_place(final_state, ()):
+          pn.add_edge(place_id, zero_task_name,  p = 1.) 
+
     for s in G.edge:
       for e in G.edge[s]:
           if G.edge[s][e].get("base", None):
             self._edge_to_task(s, e)
-
 
 
   def _petri_to_dot(self):
@@ -157,11 +193,32 @@ class Workflow(object):
     return dot
 
 
-  def _node_id(self, node):
-    if isinstance(node, WorkflowState):
-      return node.__id__()
-    else:
-      return node
+ 
+  def _task_to_dot(self, graph=None):
+    dot = "digraph %s {\n" % (self._composite.name)
+    dot += "  rankdir=LR;\n"
+    pn = graph if not graph is None else self._petri_net
+    
+    for n in pn.node:
+      dot += """  %s [label="%s_%s_", shape="rectangle"];\n""" % (n,n, round(pn.node[n].get('k', 1.), 2))
+
+    for s in pn.edge:
+      for e in pn.edge[s]:
+            dot += """  %s -> %s;\n""" % (s, e)
+
+    dot += "}"
+    return dot 
+
+
+
+  def _create_task_graph(self):
+    tg = self._petri_net.copy()
+    for n in tg.nodes():
+      if tg.node[n]['type'] == 'place':
+        for (i,o) in zip(tg.predecessors(n), tg.successors(n)):
+          tg.add_edge(i,o)
+        tg.remove_node(n)
+    return tg 
 
   def _step(self):
     self._step_counter += 1
@@ -169,8 +226,6 @@ class Workflow(object):
     self._active_states = []
     for current_state in active_states:
       [self._add_new_state(current_state, new_state, probability) for new_state, probability in current_state.generate_states()]
-    # self.show_active_states()
-
 
   def _add_new_state(self, current_state, new_state, probability = 1.):
     print "_add_new_state(%s, %s, %s)"% (current_state, new_state, probability)
@@ -190,7 +245,6 @@ class Workflow(object):
   def _add_edge(self, current_state, new_state, probability):
     g = self._flow_graph
     tasks = set([(edge[1], current_state.block_state[edge[1]]) for edge in (current_state.wave_front).difference(new_state.wave_front)])
-    # name ="_".join(["%s_st_%s" % (edge[1], current_state.block_state[edge[1]]) for edge in (current_state.wave_front).difference(new_state.wave_front)])
     g.add_edge(current_state, new_state, key = "base",  p = probability, running_tasks = tasks)
 
   def _checked_final_states(self):
@@ -213,10 +267,7 @@ class Workflow(object):
           result.add(WorkVariant(iset(self._source_ports), iset(outputs), str(node.block_state), 1.))
     return result
 
-  def _WF_net(self):
-    pass
-
-  def _make_place(self, node, flow, task, probability):
+  def _make_place(self, node, flow, name=None):
     pn = self._petri_net
     places = []
     for place_id in self._place_map.get(node, []):
@@ -225,20 +276,14 @@ class Workflow(object):
     if places:
       return places
     else:
-      place_id = getID("place")
+      place_id = name if name else getID("place")
       self._place_map.setdefault(node, []).append(place_id)
       pn.add_node(place_id, {"type" : "place", "state" : node, "flow" : flow })
       return [place_id]
 
-  def _update_place(self, old_node, new_node, flow):
-    pn = self._petri_net
-    for place_id in self._place_map.get(old_node, []):
-      if flow == pn.node[place_id].get("flow", ()):
-        print "UPDATE: ",place_id, "!!!!!!!!" 
-        self._place_map.setdefault(new_node, []).append(place_id)
 
 
-  def _get_place(self, node, flow, name = None):
+  def _get_place(self, node, flow, name=None):
     pn = self._petri_net
     places = []
     for place_id in self._place_map.get(node, []):
@@ -268,12 +313,12 @@ class Workflow(object):
           pn.add_node(zero_task_name, type = "task")
           for place_id in self._get_place(dst_node, tuple(edge[:2])):
             pn.add_edge(zero_task_name, place_id,  p = 1.)
-          for place_id in self._make_place(src_node, tuple(edge[:2]), zero_task_name, 1.):
+          for place_id in self._make_place(src_node, tuple(edge[:2])):
             pn.add_edge(place_id, zero_task_name,  p = edge_probabylity)         
 
       for edge in (src_node.wave_front).difference(dst_node.wave_front):
         if edge[1] == task[0]:
-          for place_id in self._make_place(src_node, tuple(edge[:2]), unique_task_name, edge_probabylity):
+          for place_id in self._make_place(src_node, tuple(edge[:2])):
             pn.add_edge(place_id, unique_task_name,  p = edge_probabylity)
 
       for edge in (dst_node.wave_front).difference(src_node.wave_front):
@@ -286,7 +331,7 @@ class Workflow(object):
         for place_id in self._get_place(dst_node, ()):
           pn.add_edge(unique_task_name, place_id)
 
-  def _full_decycle(self):
+  def decycle(self):
     while(nx.simple_cycles(self._petri_net)):
       self._decycle()
 
@@ -335,7 +380,9 @@ class Workflow(object):
     return result
 
   def fork_groups(self):
-    
+    for p in nx.all_simple_paths(w._petri_net, 'i', 'place_6_'):
+      pass
+
 
   def _merge_branches(self, source, target):
     base = []
