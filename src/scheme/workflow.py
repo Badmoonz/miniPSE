@@ -19,13 +19,14 @@ from sets import ImmutableSet as iset
 from tempfile import NamedTemporaryFile
 import os
 
+from numpy import matrix
 
 from collections import namedtuple
 from compiler.ast import flatten
 def getID(name = None):
   getID.names_count.setdefault(name, -1)
   getID.names_count[name]+=1 
-  return "%s%s"%("r" + str(getID.names_count[name]) + "_"  if getID.names_count[name] !=0 else "", name)
+  return "%s%s"%(name,"_" + str(getID.names_count[name]) + "_"  if getID.names_count[name] !=0 else "")
 
 getID.names_count = {}
 
@@ -64,15 +65,18 @@ class Workflow(object):
     import subprocess
     with NamedTemporaryFile(delete = False) as f:
       filepath = self.save_state_graph(f)
-      subprocess.call(["xdot", filepath], shell = False)
-    os.unlink(f.name)
+      subprocess.Popen(["xdot", filepath], shell = False)
+      print f.name
+    # os.unlink(f.name)
 
   def show_petri_net(self):
     import subprocess
     with NamedTemporaryFile(delete = False) as f:
       filepath = self.save_petri_net(f)
-      subprocess.call(["xdot", filepath], shell = False)
-    os.unlink(f.name)
+      print filepath
+      subprocess.Popen(["xdot", filepath], shell = False)
+
+    #os.unlink(f.name)
 
 
   def convert_flow_graph(self):
@@ -126,6 +130,10 @@ class Workflow(object):
 
   def petrify(self):
     G = self._flow_graph
+    pn = self._petri_net
+    initial_state = self._state_pool[0]
+    initial_flow = tuple(list(initial_state.wave_front)[0][:2])
+    self._get_place(initial_state, initial_flow, name = "i")
     for s in G.edge:
       for e in G.edge[s]:
           if G.edge[s][e].get("base", None):
@@ -231,7 +239,7 @@ class Workflow(object):
         self._place_map.setdefault(new_node, []).append(place_id)
 
 
-  def _get_place(self, node, flow):
+  def _get_place(self, node, flow, name = None):
     pn = self._petri_net
     places = []
     for place_id in self._place_map.get(node, []):
@@ -240,7 +248,7 @@ class Workflow(object):
     if places:
       return places
     else:
-      place_id = getID("place")
+      place_id = name if name else getID("place")
       self._place_map.setdefault(node, []).append(place_id)
       pn.add_node(place_id, {"type" : "place", "state" : node, "flow" : flow})
       return [place_id]
@@ -257,22 +265,91 @@ class Workflow(object):
 
       for edge in (src_node.wave_front).intersection(dst_node.wave_front):
         if edge[0] != task[0]:
-          self._update_place(src_node, dst_node, tuple(edge[:2]))
+          zero_task_name = getID("zero_task")
+          pn.add_node(zero_task_name, type = "task")
+          for place_id in self._get_place(dst_node, tuple(edge[:2])):
+            pn.add_edge(zero_task_name, place_id,  p = 1.)
+          for place_id in self._make_place(src_node, tuple(edge[:2]), zero_task_name, 1.):
+            pn.add_edge(place_id, zero_task_name,  p = edge_probabylity)         
 
       for edge in (src_node.wave_front).difference(dst_node.wave_front):
         if edge[1] == task[0]:
           for place_id in self._make_place(src_node, tuple(edge[:2]), unique_task_name, edge_probabylity):
-            pn.add_edge(place_id, unique_task_name)
+            pn.add_edge(place_id, unique_task_name,  p = edge_probabylity)
 
       for edge in (dst_node.wave_front).difference(src_node.wave_front):
         if edge[0] == task[0]:
           for place_id in self._get_place(dst_node, tuple(edge[:2])):
-            pn.add_edge(unique_task_name, place_id)
+            pn.add_edge(unique_task_name, place_id,  p = 1.)
 
       
       if not dst_node.wave_front:
         for place_id in self._get_place(dst_node, ()):
           pn.add_edge(unique_task_name, place_id)
+
+  def decycle(self, i):
+    pn = self._petri_net
+    cycle = nx.simple_cycles(self._petri_net)[i]
+
+    cycle2 = copy(cycle)[:-1]
+    for i in cycle:
+      for j in pn.edge[i]:
+        if not j in cycle2:
+            cycle2.append(j)
+
+    m = []
+    for i in cycle2:
+      m.append([pn.edge[i].get(j, {}).get('p', 0.) for j  in cycle2])
+    m = matrix(m)
+    
+    result = reduce(lambda y, i: y + m**i , range(2,200), m)
+    print cycle2
+    print m
+    shortest_paths = nx.single_source_shortest_path_length(self._petri_net, 'i')
+    shortest_paths = filter(lambda (k,v): k in cycle2, shortest_paths.iteritems())
+    shortest_paths = sorted([(j,i) for (i,j) in iter(shortest_paths)])
+    nearest_node = shortest_paths[0][1]
+    print result
+    print "sorted:" , shortest_paths
+    print "nearest_node:", nearest_node
+    return sorted(zip(cycle2, result.base[cycle2.index(nearest_node)]))
+
+
+
+
+
+  def _cyclic_subgraph(self, i):
+    pn = self._petri_net
+    cycle = nx.simple_cycles(self._petri_net)[i]
+    cycle2 = copy(cycle)[:-1]
+    for i in cycle:
+      for j in pn.edge[i]:
+        if not j in cycle2:
+            cycle2.append(j)
+
+    return nx.subgraph(self._petri_net, cycle2)
+
+
+  def _merge_branches(self, source, target):
+    base = []
+    pn = self._petri_net
+    allpathes = [p for p in nx.all_simple_paths(self._petri_net, source, target)]
+    for p in allpathes:
+      print p
+      if not base:
+        base = p[:-1]
+        pn.remove_edge(base[-1], target)
+      else:
+        partition = p[1:-1]
+        pn.remove_edge(source, partition[0])
+        pn.remove_edge(partition[-1], target)
+        connection_place = getID("place")
+        pn.add_node(connection_place, {"type" : "place", "state" : None, "flow" : None})
+        pn.add_edge(base[-1], connection_place)
+        pn.add_edge(connection_place, partition[0])
+        base += partition
+    pn.add_edge(base[-1], target)
+
 
 
   def _clear(self):
