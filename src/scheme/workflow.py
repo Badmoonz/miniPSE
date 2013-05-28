@@ -21,6 +21,8 @@ import os
 
 from numpy import matrix
 
+import uuid
+
 from collections import namedtuple
 from compiler.ast import flatten
 def getID(name = None):
@@ -133,11 +135,13 @@ class Workflow(object):
     pn = self._petri_net
     initial_state = self._state_pool[0]
     initial_flow = tuple(list(initial_state.wave_front)[0][:2])
-    self._get_place(initial_state, initial_flow, name = "i")
-    for s in G.edge:
-      for e in G.edge[s]:
-          if G.edge[s][e].get("base", None):
-            self._edge_to_task(s, e)
+    self._get_place(None, initial_flow, name = "i")
+    # for s in G.edge:
+    #   for e in G.edge[s]:
+    #       if G.edge[s][e].get("base", None):
+    for node in G.node:
+      self._transmute(node)
+
 
 
 
@@ -147,7 +151,7 @@ class Workflow(object):
     pn = self._petri_net
     
     for n in pn.node:
-      dot += """  %s [label="%s", shape= %s];\n""" % (n, n, "rectangle" if pn.node[n]['type'] == "task" else "circle")
+      dot += """  %s [label="%s", shape= %s];\n""" % (n, n if not n.startswith("zero_task") else "","rectangle" if pn.node[n]['type'] == "task" else "circle")
 
     for s in pn.edge:
       for e in pn.edge[s]:
@@ -254,38 +258,104 @@ class Workflow(object):
       return [place_id]
 
 
-  def _edge_to_task(self, src_node, dst_node):
-    pn = self._petri_net
+  def _transmute(self, node):
     G = self._flow_graph
-    tasks = G[src_node][dst_node]["base"]['running_tasks']
-    edge_probabylity = G.edge[src_node][dst_node]['base']['p']
+    pn = self._petri_net
+
+    tasks = [(block, node.block_state[block]) for block in node.running_blocks]
+    neighbors = G.neighbors(node)
+    print neighbors
+    if len(neighbors) == 0:
+      return
+    elif len(neighbors) == 1:
+      neighbor = neighbors[0]
+      edge_probabylity = G.edge[node][neighbor]['base']['p']
+      self._edge_to_task(node, neighbor, edge_probabylity)
+    else:
+      fake_node = copy(node)
+      fake_node._running_blocks = ['zero_task']*len(node._running_blocks)
+      fake_node._key = lambda : uuid.uuid1()
+      self._edge_to_fake(node, fake_node)
+      for neighbor in neighbors:
+        edge_probabylity = G.edge[node][neighbor]['base']['p']
+        self._edge_from_fake(fake_node,node,  neighbor, edge_probabylity)
+
+
+  def _edge_to_fake(self, node, fake_node, edge_probabylity = 1.):
+    pn = self._petri_net
+    tasks = [(block, node.block_state.get(block, "")) for block in node.running_blocks]
+    for task in tasks:
+      unique_task_name = getID("_".join(task))
+      pn.add_node(unique_task_name, type = "task")  
+
+      for edge in node.wave_front:
+        # if edge[0] == task[0]:
+          for place_id in self._make_place(node, tuple(edge[:2]), unique_task_name, edge_probabylity):
+            pn.add_edge(place_id, unique_task_name,  p = edge_probabylity)
+          for place_id in self._get_place(fake_node, tuple(edge[:2])):
+            pn.add_edge(unique_task_name, place_id,  p = 1.)
+   
+  def _edge_from_fake(self, fake_node, src_node, dst_node, edge_probabylity = 1.): 
+    pn = self._petri_net
+    # tasks = G.edge[src_node][dst_node]["base"]['running_tasks'] 
+    tasks = [(block, fake_node.block_state.get(block, "")) for block in fake_node.running_blocks]
     for task in tasks:
       unique_task_name = getID("_".join(task))
       pn.add_node(unique_task_name, type = "task")
 
-      for edge in (src_node.wave_front).intersection(dst_node.wave_front):
-        if edge[0] != task[0]:
-          zero_task_name = getID("zero_task")
-          pn.add_node(zero_task_name, type = "task")
-          for place_id in self._get_place(dst_node, tuple(edge[:2])):
-            pn.add_edge(zero_task_name, place_id,  p = 1.)
-          for place_id in self._make_place(src_node, tuple(edge[:2]), zero_task_name, 1.):
-            pn.add_edge(place_id, zero_task_name,  p = edge_probabylity)         
+      # for edge in (src_node.wave_front).intersection(dst_node.wave_front):
+      #   if edge[0] != task[0]:
+      #     zero_task_name = getID("zero_task")
+      #     pn.add_node(zero_task_name, type = "task")
+      #     for place_id in self._get_place(dst_node, tuple(edge[:2])):
+      #       pn.add_edge(zero_task_name, place_id,  p = 1.)
+      #     for place_id in self._make_place(src_node, tuple(edge[:2]), zero_task_name, 1.):
+      #       pn.add_edge(place_id, zero_task_name,  p = edge_probabylity)         
 
       for edge in (src_node.wave_front).difference(dst_node.wave_front):
-        if edge[1] == task[0]:
+        # if edge[0] == task[0]:
+          for place_id in self._make_place(fake_node, tuple(edge[:2]), unique_task_name, edge_probabylity):
+            pn.add_edge(place_id, unique_task_name,  p = edge_probabylity)
+
+      for edge in (dst_node.wave_front).difference(src_node.wave_front):
+        # if edge[1] == task[0]:
+          for place_id in self._get_place(dst_node, tuple(edge[:2])):
+            pn.add_edge(unique_task_name, place_id,  p = 1.)
+    
+      if not dst_node.wave_front:
+        for place_id in self._get_place(dst_node, ()):
+          pn.add_edge(unique_task_name, 'o')
+
+  def _edge_to_task(self, src_node, dst_node, edge_probabylity = 1.):
+    pn = self._petri_net
+    # tasks = G.edge[src_node][dst_node]["base"]['running_tasks'] 
+    tasks = [(block, src_node.block_state.get(block, "")) for block in src_node.running_blocks]
+    for task in tasks:
+      unique_task_name = getID("_".join(task))
+      pn.add_node(unique_task_name, type = "task")
+
+      # for edge in (src_node.wave_front).intersection(dst_node.wave_front):
+      #   if edge[0] != task[0]:
+      #     zero_task_name = getID("zero_task")
+      #     pn.add_node(zero_task_name, type = "task")
+      #     for place_id in self._get_place(dst_node, tuple(edge[:2])):
+      #       pn.add_edge(zero_task_name, place_id,  p = 1.)
+      #     for place_id in self._make_place(src_node, tuple(edge[:2]), zero_task_name, 1.):
+      #       pn.add_edge(place_id, zero_task_name,  p = edge_probabylity)         
+
+      for edge in (src_node.wave_front).difference(dst_node.wave_front):
+        # if edge[0] == task[0]:
           for place_id in self._make_place(src_node, tuple(edge[:2]), unique_task_name, edge_probabylity):
             pn.add_edge(place_id, unique_task_name,  p = edge_probabylity)
 
       for edge in (dst_node.wave_front).difference(src_node.wave_front):
-        if edge[0] == task[0]:
+        # if edge[1] == task[0]:
           for place_id in self._get_place(dst_node, tuple(edge[:2])):
             pn.add_edge(unique_task_name, place_id,  p = 1.)
-
-      
+    
       if not dst_node.wave_front:
         for place_id in self._get_place(dst_node, ()):
-          pn.add_edge(unique_task_name, place_id)
+          pn.add_edge(unique_task_name, 'i')
 
   def decycle(self, i):
     pn = self._petri_net
@@ -369,6 +439,7 @@ class WorkflowState(object):
     self._wave_front = set()
     self._composite = None
     self._block_history = {}
+    self._running_blocks = []
     if composite:
       self._init_from_composite(composite, initial_inputs, block_states)
 
@@ -379,6 +450,10 @@ class WorkflowState(object):
     return self._block_states
 
  
+  @property
+  def running_blocks(self):
+    return self._running_blocks
+
   @property
   def wave_front(self):
     #return map(lambda w: {'edge' : w.edge, 'splitting' : w.splitting}, self._wave_front)
@@ -408,6 +483,7 @@ class WorkflowState(object):
     print self._dst_map, "\n#####"
     # print self.block_state
     self._src_map = self._wavefront_src_map()
+    self._running_blocks = []
     blocks_to_launch = set()
     for dst_block in self._dst_map:
       block_work_variants = self._block_work(dst_block, self.block_state[dst_block], set(self._dst_map[dst_block].keys()))
@@ -424,6 +500,7 @@ class WorkflowState(object):
       yield (self, 1.0)
     else:
       dst_block, target_variants = blocks_to_launch.pop()
+      self._running_blocks += [dst_block]
       for state, prob in self._evolve_state(blocks_to_launch):
         for block_work_variant in target_variants: 
           print "@block_work_variant\n", block_work_variant, "\n"
