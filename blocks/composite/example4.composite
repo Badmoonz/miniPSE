@@ -4,8 +4,8 @@ digraph Example4 {
   block_groups = "functional, pure"
 
   f[block_type="F"];
-  map[block_type="Map"];
-  map2[block_type="Map"];
+  map[block_type="Map2"];
+  map2[block_type="Map2"];
   source:xs -> map:xs;
   map:x -> map2:xs;
   map2:x -> f:x;

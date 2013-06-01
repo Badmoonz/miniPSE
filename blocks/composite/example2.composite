@@ -3,10 +3,10 @@ digraph Example2 {
   outputs = "fs";
 
   f[block_type="F2"];
-  map[block_type="Map"];
+  for_each[block_type="For_each"];
   
-  source:xs -> map:xs;
-  map:x -> f:x;
-  f:f -> map:f;
-  map:fs -> stock:fs;
+  source:xs -> for_each:xs;
+  for_each:x -> f:x;
+  f:f -> for_each:f;
+  for_each:fs -> stock:fs;
 }
