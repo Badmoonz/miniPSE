@@ -1,0 +1,10 @@
+digraph For_each {
+  inputs = "xs, f";
+  outputs = "fs, x";
+  block_groups = "for-like";
+  ##initial -> initial [inputs = "xs", outputs = "fs", p=0.5];
+  initial -> loop [inputs = "xs", outputs = "x"];
+  
+  loop -> initial [inputs = "f", outputs = "fs", p=0.5];
+  loop -> loop [inputs = "f", outputs = "x", p=0.5];
+}
