@@ -1,0 +1,15 @@
+digraph Map {
+  rankdir=LR;
+  "initial" [color=green];
+  "length_1" [color=red];
+  "non_trivial" [color=blue];
+  
+  "initial" -> "initial" [label="[xs] / [fs]"];
+  "initial" -> "length_1" [label="[xs] / [x]"];
+  
+  "length_1" -> "non_trivial" [label="[f] / [x]"];
+  "length_1" -> "initial" [label="[f] / [fs]"];
+  
+  "non_trivial" -> "initial" [label="[f] / [fs]"];
+  "non_trivial" -> "non_trivial" [label="[f] / [x]"];
+}
