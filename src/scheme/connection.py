@@ -153,15 +153,16 @@ class ConnectionGraph:
     return "%s_%s:%s" % (external_name, direction, port)
   
   def to_dot(self, external_name=None, hierarchical=False, subgraph=False):
+    external_name = "" #self.name
     if external_name is None:
-      external_name = self.name
+      external_name = "" #self.name
     
     if hierarchical:
       def node_dot(node, node_name):
-        return node.to_dot(external_name + "_" + node_name, True, True)
+        return node.to_dot(external_name +  node_name, True, True)
     else:
       def node_dot(node, node_name):
-        return TrivialConnectionGraph(node.inputs, node.outputs).to_dot(external_name + "_" + node_name, True, True)
+        return TrivialConnectionGraph(node.inputs, node.outputs).to_dot(external_name +  node_name, True, True)
     
     if hierarchical:
       def edge_dot(from_node, from_name, to_node, to_name, attrs):
@@ -169,8 +170,8 @@ class ConnectionGraph:
         from_p = attrs["from_port"]
         to_p = attrs["to_port"]
         color = attrs.get("color", "black")
-        from_s = from_node.port_to_dot(external_name + "_" + from_name, from_p, STOCK)
-        to_s = to_node.port_to_dot(external_name + "_" + to_name, to_p, SOURCE)
+        from_s = from_node.port_to_dot(external_name + from_name, from_p, STOCK)
+        to_s = to_node.port_to_dot(external_name +  to_name, to_p, SOURCE)
         return pattern % (from_s, to_s, color)
     else:
       def edge_dot(from_node, from_name, to_node, to_name, attrs):
@@ -178,8 +179,8 @@ class ConnectionGraph:
         to_p = attrs["to_port"]
         color = attrs.get("color", "black")
         pattern = """  %s -> %s[color = "%s"];\n"""
-        from_l = external_name + "_" + from_name + ":" + from_p
-        to_l = external_name + "_" + to_name + ":" + to_p
+        from_l = external_name + from_name + ":" + from_p
+        to_l = external_name +  to_name + ":" + to_p
         return pattern % (from_l, to_l, color) 
     
     def header():

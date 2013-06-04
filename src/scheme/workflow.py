@@ -140,8 +140,10 @@ class Workflow(object):
       for e in G.edge[s]:
           base_edge = G.edge[s][e].get("base", None)
           if base_edge:
-            dot += """  %s -> %s[label="%s"];\n""" % \
-                    (s.__id__(), e.__id__(), "%s %s" % (",".join(["%s_%s" %(t,st) for t, st in base_edge['running_tasks']]), base_edge['p']))
+            dot += """ %s -> %s[label="%s"];\n""" % \
+                  (s.__id__(), e.__id__(), ', '.join([edge_str(edge) for edge in (s.wave_front).difference(e.wave_front)]))
+
+
 
     dot += "}"
     return dot
