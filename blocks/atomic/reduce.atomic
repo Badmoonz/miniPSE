@@ -1,0 +1,6 @@
+digraph Reduce {
+  inputs = "f1,f2,f3";
+  outputs = "f";
+  
+  initial -> initial [inputs="f1,f2,f3", outputs="f"];
+}

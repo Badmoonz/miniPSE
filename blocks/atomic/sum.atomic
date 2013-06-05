@@ -1,0 +1,6 @@
+digraph Sum {
+  inputs = "x, y";
+  outputs = "result";
+  
+  initial -> initial [inputs="x, y", outputs="result"];
+}

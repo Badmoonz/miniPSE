@@ -1,0 +1,20 @@
+digraph Example8 {
+  inputs = "x";
+  outputs = "x";
+
+  if1[block_type="If"];
+  if2[block_type="If"];
+  if3[block_type="If"];
+  tube[block_type="Tube"];
+
+  source:x -> tube:x;
+  tube:y -> if1:x;
+  if1:false -> if2:x;
+  if1:true -> if3:x;
+  if2:false -> stock:x;
+  if3:false -> stock:x;
+  if2:true -> stock:x;
+  if3:true -> stock:x;
+
+  ##RaceCondition expected
+}

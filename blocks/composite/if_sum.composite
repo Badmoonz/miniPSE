@@ -1,0 +1,24 @@
+digraph IfSum {
+  inputs = "x";
+  outputs = "result";
+
+  f1[block_type="F2"];
+  f2[block_type="F2"];
+  t[block_type="F"];
+  t2[block_type="F"];
+  sum[block_type="Sum"];
+  if[block_type="If"];
+  source:x -> t:x;
+  t:f -> if:x;
+  t:f -> sum:y;
+  if:false -> f1:x;
+  if:true -> f2:x;
+ # f1:f -> t2:x;
+  #f2:f -> t2:x;
+  #t2:f -> sum:x;
+  f1:f -> sum:x;
+  f2:f -> sum:x;
+  sum:result -> stock:result;
+
+  ##RaceCondition expected
+}

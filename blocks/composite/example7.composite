@@ -1,0 +1,24 @@
+
+digraph Example7 {
+  inputs = "xs";
+  outputs = "fs1,fs2";
+
+  f1[block_type="F"];
+  map1[block_type="Map2"];
+
+  tube[block_type="Tube"];
+  f2[block_type="F"];
+  map2[block_type="Map2"];
+  
+  source:xs -> tube:x;
+
+  tube:y -> map1:xs;
+  map1:x -> f1:x;
+  f1:f -> map1:f;
+  map1:fs -> stock:fs1;
+
+  tube:y -> map2:xs;
+  map2:x -> f2:x;
+  f2:f -> map2:f;
+  map2:fs -> stock:fs2;
+}

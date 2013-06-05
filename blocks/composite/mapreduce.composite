@@ -1,0 +1,23 @@
+digraph MapReduce {
+  inputs = "x";
+  outputs = "result";
+
+  map[block_type="Map"];
+  reduce[block_type="Reduce"];
+  f1[block_type="F"];
+  f2[block_type="F"];
+  f3[block_type="F"];
+  source:x -> map:x;
+  map:x1 -> f1:x;
+  map:x2 -> f2:x;
+  map:x3 -> f3:x;
+
+  f1:f -> reduce:f1;
+  f2:f -> reduce:f2;
+  f3:f -> reduce:f3;
+
+
+  reduce:f -> stock:result;
+
+  ##RaceCondition expected
+}

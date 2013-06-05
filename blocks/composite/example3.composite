@@ -2,16 +2,16 @@ digraph Example3 {
   inputs = "x";
   outputs = "x, y";
 
-  tube1[block_type="Tube"];
+  f[block_type="F"];
   if1[block_type="If"];
   if2[block_type="If"];
   source:x -> if1:x;
   source:x -> if2:x;
-  if1:false -> tube1:x;
-  if2:false -> tube1:x;
+  if1:false -> f:x;
+  if2:false -> f:x;
   if1:true -> stock:y;
   if2:true -> stock:y;
-  tube1:y -> stock:x;
+  f:f -> stock:x;
 
   ##RaceCondition expected
 }

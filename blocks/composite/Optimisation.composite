@@ -1,0 +1,15 @@
+digraph Optimization {
+  inputs = "start";
+  outputs = "solution";
+
+  f[block_type="F"];
+  grad_f[block_type="F"];
+  opt[block_type="Opt"];
+  
+  source:start -> opt:start;
+  opt:x -> f:x;
+  opt:x -> grad_f:x;
+  f:f -> opt:f;
+  grad_f:f -> opt:grad_f;
+  opt:solution -> stock:solution;
+}
