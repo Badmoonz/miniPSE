@@ -185,7 +185,7 @@ class Workflow(object):
     pn = self._petri_net
     
     for n in pn.node:
-      dot += """  %s [label="%s", shape= %s];\n""" % (n, n, "rectangle" if pn.node[n]['type'] == "task" else "circle")
+      dot += """  %s [label="%s", shape= %s];\n""" % ((n, n, "rectangle") if pn.node[n]['type'] == "task" else (n, n if n in ["o", "i"] else "" , "circle"))
 
     for s in pn.edge:
       for e in pn.edge[s]:
@@ -339,8 +339,8 @@ class Workflow(object):
 
   def _decycle(self):
     pn = self._petri_net
-    cycle = nx.simple_cycles(self._petri_net)[0]
-
+    cycle = list(reduce(lambda y,x : set(y).union(set(x)) if set(y).intersection(set(x)) else set(y), nx.simple_cycles(self._petri_net)))
+    print cycle
     exits = {}
     for i in cycle:
       for j in pn.edge[i]:
@@ -348,7 +348,7 @@ class Workflow(object):
           exits.setdefault(j, set()).add(i)
 
     print exits
-    cycle2 = copy(cycle)[:-1] + exits.keys()
+    cycle2 = copy(cycle) + exits.keys()
 
     m = []
     for i in cycle2:
@@ -356,24 +356,39 @@ class Workflow(object):
     m = matrix(m)
     
     result = reduce(lambda y, i: y + m**i , range(2,200), m)
-    shortest_paths = nx.single_source_shortest_path_length(self._petri_net, 'i')
-    shortest_paths = filter(lambda (k,v): k in cycle2, shortest_paths.iteritems())
-    shortest_paths = sorted([(j,i) for (i,j) in iter(shortest_paths)])
-    nearest_node = shortest_paths[0][1]
-    predessor = nx.subgraph(self._petri_net, cycle2).predecessors(nearest_node)[0]
-    result_v = result.base[cycle2.index(nearest_node)]
+    def breake_cycle(cycle_nodes, exits = None):
+      if not exits:
+        exits = {}
+        for i in cycle_nodes:
+          for j in pn.edge[i]:
+            if not j in cycle_nodes:
+              exits.setdefault(j, set()).add(i)
+      shortest_paths = nx.single_source_shortest_path_length(self._petri_net, 'i')
+      shortest_paths = filter(lambda (k,v): k in cycle_nodes, shortest_paths.iteritems())
+      shortest_paths = sorted([(j,i) for (i,j) in iter(shortest_paths)])
+      nearest_node = shortest_paths[0][1]
+      predessor = nx.subgraph(self._petri_net, cycle_nodes).predecessors(nearest_node)[0]
+      loop_exit = getID("place")
+      pn.add_node(loop_exit, {"type" : "place", "state" : None, "flow" : None})
+      pn.remove_edge(predessor, nearest_node)
+      pn.add_edge(predessor, loop_exit)
+      print exits
+      for (t, preds) in exits.iteritems():
+        for p in preds:
+          pn.remove_edge(p, t)
+          pn.add_edge(loop_exit, t)
+
+      return nearest_node, loop_exit
+    loop_start, loop_exit = breake_cycle(cycle2, exits)
+    for c in nx.simple_cycles(pn.subgraph(cycle)):
+      breake_cycle(c)
+
+
+    result_v = result.base[cycle2.index(loop_start)]
     result_m = dict([(cycle2[i], result_v[i]) for i in range(len(cycle2))])
-    result =  sorted(zip(cycle2, result.base[cycle2.index(nearest_node)]))
-
-
-    loop_exit = getID("place")
-    pn.add_node(loop_exit, {"type" : "place", "state" : None, "flow" : None})
-    pn.remove_edge(predessor, nearest_node)
-    pn.add_edge(predessor, loop_exit)
-    for (t, preds) in exits.iteritems():
-      for p in preds:
-        pn.remove_edge(p, t)
-      pn.add_edge(loop_exit, t, p = result_m[t])
+    result =  sorted(zip(cycle2, result.base[cycle2.index(loop_start)]))
+    for t in exits:
+      pn.edge[loop_exit][t]['p'] = result_m[t]
     for n in cycle:
       for i in pn.successors(n):
         pn.edge[n][i]['p'] = 1.

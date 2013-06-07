@@ -1,8 +1,8 @@
 digraph Opt {
-  inputs = "start, f, grad_f";
+  inputs = "start, f";
   outputs = "solution, x";
   initial -> solve [inputs = "start", outputs = "x"];
   
-  solve -> initial [inputs = "f, grad_f", outputs = "solution", p=0.1];
-  solve -> solve [inputs = "f, grad_f", outputs = "x", p=0.9];
+  solve -> initial [inputs = "f", outputs = "solution", p=0.1];
+  solve -> solve [inputs = "f", outputs = "x", p=0.9];
 }

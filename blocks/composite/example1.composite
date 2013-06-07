@@ -2,11 +2,18 @@ digraph Example1 {
   inputs = "xs";
   outputs = "fs";
 
-  f[block_type="F"];
+  t[block_type="F"];
+  f1[block_type="F2"];
+  f2[block_type="F2"];
+  if[block_type="If"];
   for_each[block_type="For_each"];
   
   source:xs -> for_each:xs;
-  for_each:x -> f:x;
-  f:f -> for_each:f;
+  for_each:x -> if:x;
+  if:true -> f1:x;
+  if:false -> f2:x;
+  f1:f -> t:x;
+  f2:f -> t:x;
+  t:f -> for_each:f;
   for_each:fs -> stock:fs;
 }

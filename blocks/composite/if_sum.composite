@@ -6,11 +6,15 @@ digraph IfSum {
   f2[block_type="F2"];
   t[block_type="F"];
   t2[block_type="F"];
+  t3[block_type="F"];
+  t2[block_type="F"];
   sum[block_type="Sum"];
   if[block_type="If"];
   source:x -> t:x;
   t:f -> if:x;
-  t:f -> sum:y;
+  t:f -> t2:x;
+  t2:f -> t3:x;
+  t3:f -> sum:y;
   if:false -> f1:x;
   if:true -> f2:x;
  # f1:f -> t2:x;

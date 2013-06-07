@@ -6,10 +6,10 @@ digraph Optimization {
   grad_f[block_type="F"];
   opt[block_type="Opt"];
   
-  source:start -> opt:start;
-  opt:x -> f:x;
-  opt:x -> grad_f:x;
-  f:f -> opt:f;
-  grad_f:f -> opt:grad_f;
-  opt:solution -> stock:solution;
+#  source:start -> opt:start;
+#  opt:x -> f:x;
+#  opt:x -> grad_f:x;
+#  f:f -> opt:f;
+#  grad_f:f -> opt:grad_f;
+ # opt:solution -> stock:solution;
 }
