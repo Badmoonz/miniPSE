@@ -259,7 +259,7 @@
 \newcommand{\labelitemi}{--}
 
 %  нумерованные перечисления
-\renewcommand\theenumi {\asbuk{enumi}}
+\renewcommand\theenumi {\arabic{enumi}}
 \renewcommand\theenumii{\arabic{enumii}}
 \newcommand\labelenumi{\theenumi)}
 \newcommand\labelenumii{\theenumii)}
@@ -286,7 +286,7 @@
 \RequirePackage{icomma}
 \input{leqno.clo}
 
-\newcommand\eqref[1]{\ref{#1}}
+%\newcommand\eqref[1]{\ref{#1}}
 \def\@eqnnum{{\normalfont\normalcolor\theequation}}
 \newenvironment{table} {\@float   {table}}{\end@float   }
 \newenvironment{table*}{\@dblfloat{table}}{\end@dblfloat}
