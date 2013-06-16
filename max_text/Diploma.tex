@@ -887,7 +887,63 @@ $C = (\hat{B}_c = B_c \cup \{\source, \stock\}, \hat{E}_c= E_c \cup E^I_c \cup E
   Для этого мы будем строить 'внутренний' автомат Мили всего потока данных.
   
   \begin{defen}
+    \textbf{Внутренним автоматом Мили} потока данных будем называть граф $\FA_c = (S, E)$, где:
+    \begin{itemize}
+      \item $S = \Sigma \times 2^{E_c}$ --- множество состояний потока данных (то же, что и в определении потока данных);
+      \item $E \subseteq S \times \Pi \times S$ --- множество ребер 'внутреннего' автомата Мили потока данных,
+        где $\Pi = \cup_{v \in B_c} \Pi_v$, $\Pi_v$ --- множество переходов автомата Мили блока $v \in B_c$.
+    \end{itemize}
   \end{defen}
+  
+  В отличии от алгоритма \ref{simple_wave_alg} в данном алгоритме мы будем делать по одному запуску блока за итерацию, причем отдавать предпочтение
+  испущенным в результате предыдущего запуска данным.
+  
+  \begin{algorithm}
+    \caption{Волновой алгоритм для случая корректного потока данных}
+    \label{wave_alg}
+    \begin{algorithmic}[1]
+      \State $S \leftarrow \varnothing$
+      \State $E \leftarrow \varnothing$
+      \Function{Wave}{$c = (B_c, E_c), S_B, Q_W$}
+         \State $S \leftarrow S \cup \{(S_B, Q_W)\}$
+         \State $\omega' \leftarrow \varnothing$
+         \State $Q'_W \leftarrow Q_W$
+         \While{$\forall v \in B_c : \FA_v(s_v, \omega') = \varnothing \vee \neg \zeta(\sigma, \omega)$}
+           \State $\omega' \leftarrow \omega' \cup \{\text{pop}(Q'_W)\}$
+         \EndWhile
+         \Statex
+         \State $v \leftarrow \{v \in B_c \vert \FA_v(s_v, \omega') \neq \varnothing \}_1$
+         \State $\Pi \leftarrow \FA(stateOfBlock(S_B, v), I_v(\omega'))$
+         \ForAll{$\pi_v \in \Pi$}
+           \State $(\sigma, \lambda, q) \leftarrow \pi$
+           \State $Q'_W \leftarrow \text{push}(\text{delete}(Q_W, \lambda), \sigma)$
+           \State $S'_B \leftarrow SetStateOfBlock(S_B, v, q)$
+           \If{$(S'_B, Q'_W) \notin S$}
+             \State $S \leftarrow S \cup \{(S'_B, Q'_W)\}$
+             \State $E \leftarrow E \cup (S_B, Q_W, \pi_v, S'_B, Q'_W)$
+             \State $\text{Wave}(c, S'_B, Q'_W)$
+          \Else
+             \State $E \leftarrow E \cup (S_B, Q_W, \pi_v, S'_B, Q'_W)$
+          \EndIf
+         \EndFor
+      \EndFunction
+    \end{algorithmic}
+  \end{algorithm}
+  
+  Начальный запуск осуществляется как $\text{Wave}(c, S_0, \text{push}(\text{empty\_stack}, \omega_0))$.
+  Вспомогательные функции $\text{push}$, $\text{delete}$ и $\text{pop}$ являются стандартными функциями для работы со стеком.
+  Заметим, что алгоритм заведомо завершится за конечное количество шагов, так как единственный рекурсивный вызов в строке 19 осуществляется только при отсутствии рассматриваемой
+  точки 'внутреннего' автомата Мили в множестве $S$, которое заведомо конечно. Доказательство корректности алгоритма повторяет доказательство
+  корректности алгоритма \ref{simple_wave_alg}, с той лишь разницой, что требуется заметить, что одиночный запуск блока за вызов функции $\text{Wave}$ при отсутствии
+  состояний гонки (что гарантируется корректностью потока данных) дает корректный автомат Мили.
+  
+  Поясним теперь необходимость представления активной волны в виде стека. Для этого достаточно рассмотреть поток данных, в котором дополнительная ветка расположена параллельно циклу.
+  Так как кортеж $S_B$ содержит состояния всех блоков, то для избежания лишних итераций алгоритма, благодаря стеку, выполнение параллельной ветки 'остановиться' на время выполнения
+  рассчета цикла.
+  
+  Заметим, что полученный 'внутренний' автомат Мили позволяет довольно просто генерировать графы причинности и его можно неформально рассматривать
+  как конечный автомат для регулярного 'языка' графов причинности.
+  
   
 \subsection{Поиск неопределенностей второго рода}
 
