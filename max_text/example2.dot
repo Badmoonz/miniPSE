@@ -1,0 +1,77 @@
+digraph Example2 {
+  rankdir = LR;
+  if1[shape=Mrecord, label="If1 | {{<x> X} | {<t> True | <f> False}}"];
+  {
+    rank=same;
+    if2[shape=Mrecord, label="If2 | {{<x> X} | {<t> True | <f> False}}"];
+    if3[shape=Mrecord, label="H | {{<x> X} | {<f> H}}"];
+  }
+  {
+    rank=same;
+    f0[shape=Mrecord, label="F0 | {{<x> X} | {<y> F}}"];
+    f1[shape=Mrecord, label="F1 | {{<x> X} | {<y> F}}"];
+    f2[shape=Mrecord, label="F2 | {{<x> X} | {<y> F}}"];
+    f4[shape=Mrecord, label="F4 | {{<x> X} | {<y> F}}"];
+    f5[shape=Mrecord, label="F5 | {{<x> X} | {<y> F}}"];
+  }
+  {
+    rank=same;
+    g2[shape=Mrecord, label="G2 | {{<x> X} | {<y> G}}"];
+    g3[shape=Mrecord, label="G3 | {{<x> X} | {<y> G}}"];
+    g4[shape=Mrecord, label="G6 | {{<x> X} | {<y> G}}"];
+    g5[shape=Mrecord, label="G7 | {{<x> X} | {<y> G}}"];
+    g6[shape=Mrecord, label="G6 | {{<x> X} | {<y> G}}"];
+    g7[shape=Mrecord, label="G7 | {{<x> X} | {<y> G}}"];
+  }
+  
+  {
+    rank=source;
+    source[shape=Mrecord, label="SOURCE | {{<d> Data}}"];
+  }
+  
+  source:d -> if1:x;
+  
+  if1:t -> if2:x;
+  if1:f -> if3:x;
+  
+  if2:t -> f0:x;
+  
+  if2:f -> f1:x;
+  if2:f -> f2:x;
+  
+  if3:f -> f4:x;
+  if3:f -> f5:x;
+  
+  f2:y -> g2:x;
+  f2:y -> g3:x;
+  
+  f4:y -> g4:x;
+  f4:y -> g5:x;
+  
+  f5:y -> g6:x;
+  f5:y -> g7:x;
+  
+  {
+    rank=same;
+    join1[shape=Mrecord, label="Join1 | {{<x1> X1 | <x2> X2 | <x3> X3} | {<y> Y}}"];
+    join2[shape=Mrecord, label="Join2 | {{<x1> X1 | <x2> X2 | <x3> X3 | <x4> X4} | {<y> Y}}"];
+  }
+  
+  f1:y -> join1:x1;
+  g2:y -> join1:x2;
+  g3:y -> join1:x3;
+  
+  g4:y -> join2:x1;
+  g5:y -> join2:x2;
+  g6:y -> join2:x3;
+  g7:y -> join2:x4;
+  
+  {
+    rank=sink;
+    stock [shape=Mrecord, label="STOCK | {{<x> X}}"];
+  }
+  
+  f0:y -> stock:x;
+  join1:y -> stock:x;
+  join2:y -> stock:x;
+}

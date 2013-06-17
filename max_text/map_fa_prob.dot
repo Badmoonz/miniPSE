@@ -1,0 +1,9 @@
+digraph Map {
+  rankdir=LR;
+  "initial" [color=green];
+  "non_trivial" [color=black];
+  "initial" -> "initial" [label="a"];
+  "initial" -> "non_trivial" [label="1 - a"];
+  "non_trivial" -> "initial" [label="1 - b"];
+  "non_trivial" -> "non_trivial" [label="b"];
+}
