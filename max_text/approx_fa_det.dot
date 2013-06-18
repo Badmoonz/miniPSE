@@ -1,0 +1,16 @@
+digraph Map {
+  rankdir=LR;
+  initial [color=green];
+  with_model;
+  
+  initial -> with_model[label="[model] / []"];
+  
+  set_model [label="set_model"];
+  get_f [label="get_f"];
+  
+  with_model -> set_model [label = "[action] / []"];
+  with_model -> get_f [label = "[action] / []"];
+  
+  set_model -> with_model[label="[model] / []"];
+  get_f -> with_model[label="[x] / [f]"];
+}

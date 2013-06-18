@@ -1,0 +1,87 @@
+@TechReport{lhc-manual,
+author = {The LCG TDR Editorial Board},
+title = {LHC Computing Grid, Technical Design Report},
+institution = {CERN},
+year = {2005}
+}
+
+@Misc{top500,
+title = {TOP 500 supercomputer sites},
+year = {2013},
+howpublished = {\url{http://www.top500.org/list/2013/06/}}
+}
+
+@Manual{grid-ant,
+title = {GridAnt: A Grid Workflow System},
+author = {Kaizar Amin, Gregor von Laszewski}
+}
+
+@Misc{lhc-home,
+title = {LHC@home project},
+howpublished = {\url{http://lhcathome.web.cern.ch/LHCathome/}}
+}
+
+@InProceedings{data-flow-process-networks,
+author = {Edward A. Lee, Thomas M. Parks},
+title = {DATAFLOW PROCESS NETWORKS},
+booktitle = {IEEE},
+year = {1995},
+month = {May}
+}
+
+@InProceedings{sci-wf-systems,
+author = {V. Curcin, M. Ghanem},
+title = {Scientiﬁc workﬂow systems - can one size ﬁt all?},
+booktitle = {IEEE, CIBEC'08},
+year = {2008}
+}
+
+@InProceedings{analysing-control-work-flow,
+author = {Nikola Trecka, Wil van der Aalst, Natalia Sidorova},
+title = {Analyzing Control-Flow and Data-Flow in Workfow Processes in a Unifed Way},
+booktitle = {}
+}
+
+@Book{workflow-managment,
+author = {Wil van der Aalst, Kees van Hee},
+editor = {},
+title = {Workflow Management. Models, Methods, and Systems},
+publisher = {The MIT Press Cambridge, Massachusetts London, England},
+year = {2002}
+}
+
+@InCollection{heft,
+author = {Dan Ma, Wei Zhang},
+publisher = {Springer Berlin Heidelberg},
+title = {A Static Task Scheduling Algorithm in Grid Computing},
+booktitle = {Grid and Cooperative Computing},
+pages = {153-156},
+year={2004}
+}
+
+@Article{yaheft,
+author = {T. Hagras, J. Janecek},
+title = {A high performance, low complexity algorithm for compile-time task scheduling in heterogeneous systems},
+journal = {Parallel Computing},
+year = {2005},
+volume = {31},
+pages = {653-670},
+month = {July}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

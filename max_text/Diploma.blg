@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: Diploma.aux
+The style file: unsrt.bst
+Database file #1: biblio.bib
+Warning--empty booktitle in analysing-control-work-flow
+Warning--empty year in analysing-control-work-flow
+You've used 10 entries,
+            1791 wiz_defined-function locations,
+            491 strings with 4622 characters,
+and the built_in function-call counts, 1629 in all, are:
+= -- 135
+> -- 34
+< -- 1
++ -- 18
+- -- 8
+* -- 56
+:= -- 240
+add.period$ -- 27
+call.type$ -- 10
+change.case$ -- 9
+chr.to.int$ -- 0
+cite$ -- 12
+duplicate$ -- 99
+empty$ -- 217
+format.name$ -- 8
+if$ -- 391
+int.to.chr$ -- 0
+int.to.str$ -- 10
+missing$ -- 7
+newline$ -- 49
+num.names$ -- 8
+pop$ -- 57
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 41
+stack$ -- 0
+substring$ -- 49
+swap$ -- 21
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 2
+while$ -- 11
+width$ -- 12
+write$ -- 95
+(There were 2 warnings)

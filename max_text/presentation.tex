@@ -36,12 +36,9 @@
 \setbeamercolor{color1}{bg=blue!60!black,fg=white}
 %%%%%%%%%%%%%%%%%%
 
-\title{Построение, запуск и анализ потоков данных в распределенных средах}
+\title{Построение, анализ и оптимизация динамического потока данных в однородной распределенной среде}
 \author{Борисяк Максим}
-\institute{МФТИ
-%    \vspace{0.7cm}
- %   Научный руководитель:  ФИО шефа с регалиями \\
-%    \vspace{0.7cm}
+\institute{МФТИ (ГУ)
 }
 \date{
     \\
@@ -313,7 +310,7 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
   $$N_{\max} = \max_{\Delta} \max_{S^j \in \Delta} \lvert S^j \rvert$$
   Выполнять поток данных на $N > N_{\max}$ вычислителях бессмысленно.
   Для $N < N_{\min}$ --- заведомо высокая конкуренция процессов.
-  Для определения $N_{\min}$ и $N_{\max}$ используется \textbf{SHELF-алгоритм}.
+  Для определения $N_{\min}$ и $N_{\max}$ используется \textbf{HEFT-алгоритм}.
 \end{frame}
 
 \begin{frame}
@@ -346,12 +343,46 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
   \begin{itemize}
     \item Остаточные данные --- во время работы волнового алгоритма по наличию состояний с остаточным данными.
     \item Варианты поглощения данных --- во время работы волнового алгоритма.
-    \item Состояния гонки --- ведение истории на портах, ведение истории данных.
+    \item Состояния гонки --- модификация волнового алгоритма.
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{Обнаружение состояний гонки}
+  \begin{itemize}
+    \item \textbf{Коррелирующие волны} --- волны, одна из которых потомок другой.\\
+    Модификация волнового алгоритма:
+    \begin{itemize}
+      \item определение корреляции волн,
+      \item ведение истории на портах,
+      \item проверка волн при поглощении
+    \end{itemize}
+ \item \textbf{Детерминированный по входу автомат Мили} $\FA = (S, s_0, \Sigma, \Lambda, E)$:
+    $$\forall s \in S: \forall \sigma, \sigma': (s, \sigma, \cdot, \cdot) \in \Sigma \wedge (s, \sigma', \cdot, \cdot) \in \Sigma \Rightarrow \sigma = \sigma'$$
+    Такой автомат исключает самый сложный тип состояния гонки --- гонку на различные варианты поглощения.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Пример с аппроксиматором}
+    \begin{figure}[H]
+  \centering
+
+  \begin{subfigure}[b]{\textwidth}
+    \centering
+    \includegraphics[width=0.8\textwidth]{approx_fa.pdf}
+    \caption{Не детерминированный по входу автомат Мили блока аппроксимации}
+    \label{notdetFA}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{\textwidth}
+    \centering
+    \includegraphics[width=0.8\textwidth]{approx_fa_det.pdf}
+    \caption{Детерминированный аналог}
+    \label{detFA}
+  \end{subfigure}
+  \label{det_example}
+  \end{figure} 
 \end{frame}
 
 \section{Заключение}
@@ -378,6 +409,7 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
     \item Алгоритмы автоматической кластеризации блоков.
     \item Модификация модели потоков данных.
     \item Анализ работы потоков данных в гетерогенных и/или динамических распределенных средах.
+    \item Анализ свойств потоков, построенных на основе определенного набора атомарных блоков.
   \end{itemize}
 \end{frame}
 

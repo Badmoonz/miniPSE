@@ -1,0 +1,52 @@
+\begin{thebibliography}{10}
+
+\bibitem{lhc-manual}
+The LCG TDR~Editorial Board.
+\newblock Lhc computing grid, technical design report.
+\newblock Technical report, CERN, 2005.
+
+\bibitem{top500}
+Top 500 supercomputer sites.
+\newblock \url{http://www.top500.org/list/2013/06/}, 2013.
+
+\bibitem{lhc-home}
+Lhc@home project.
+\newblock \url{http://lhcathome.web.cern.ch/LHCathome/}.
+
+\bibitem{data-flow-process-networks}
+Thomas M.~Parks Edward A.~Lee.
+\newblock Dataflow process networks.
+\newblock In {\em IEEE}, May 1995.
+
+\bibitem{sci-wf-systems}
+M.~Ghanem V.~Curcin.
+\newblock Scientiﬁc workﬂow systems - can one size ﬁt all?
+\newblock In {\em IEEE, CIBEC'08}, 2008.
+
+\bibitem{grid-ant}
+Gregor von~Laszewski Kaizar~Amin.
+\newblock {\em GridAnt: A Grid Workflow System}.
+
+\bibitem{analysing-control-work-flow}
+Natalia~Sidorova Nikola~Trecka, Wil van der~Aalst.
+\newblock Analyzing control-flow and data-flow in workfow processes in a unifed
+  way.
+
+\bibitem{workflow-managment}
+Kees van~Hee Wil van~der Aalst.
+\newblock {\em Workflow Management. Models, Methods, and Systems}.
+\newblock The MIT Press Cambridge, Massachusetts London, England, 2002.
+
+\bibitem{heft}
+Wei~Zhang Dan~Ma.
+\newblock A static task scheduling algorithm in grid computing.
+\newblock In {\em Grid and Cooperative Computing}, pages 153--156. Springer
+  Berlin Heidelberg, 2004.
+
+\bibitem{yaheft}
+J.~Janecek T.~Hagras.
+\newblock A high performance, low complexity algorithm for compile-time task
+  scheduling in heterogeneous systems.
+\newblock {\em Parallel Computing}, 31:653--670, July 2005.
+
+\end{thebibliography}

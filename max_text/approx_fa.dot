@@ -1,0 +1,9 @@
+digraph Map {
+  rankdir=LR;
+  initial [color=green];
+  with_model [label="with_model"];
+  
+  initial -> with_model [label = "[model] / []"];
+  with_model -> with_model [label = "[model] / []"];
+  with_model -> with_model [label = "[x] / [f]"];
+}
