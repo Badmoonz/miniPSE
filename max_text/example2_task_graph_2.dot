@@ -1,0 +1,49 @@
+digraph Example2 {
+  rankdir = LR;
+  if1[shape=Mrecord, label="If1"];
+  {
+    rank=same;
+    if2[shape=Mrecord, label="If2"];
+  }
+  {
+    rank=same;
+    f1[shape=Mrecord, label="F1"];
+    f2[shape=Mrecord, label="F2"];
+  }
+  {
+    rank=same;
+    g2[shape=Mrecord, label="G2"];
+    g3[shape=Mrecord, label="G3"];
+  }
+  
+  {
+    rank=source;
+    source[shape=Mrecord, label="SOURCE"];
+  }
+  
+  source:d -> if1:x;
+  
+  if1:t -> if2:x;
+  
+  if2:f -> f1:x;
+  if2:f -> f2:x;
+  
+  f2:y -> g2:x;
+  f2:y -> g3:x;
+  
+  {
+    rank=same;
+    join1[shape=Mrecord, label="Join1"];
+  }
+  
+  f1:y -> join1:x1;
+  g2:y -> join1:x2;
+  g3:y -> join1:x3;
+  
+  {
+    rank=sink;
+    stock [shape=Mrecord, label="STOCK"];
+  }
+  
+  join1:y -> stock:x;
+}
