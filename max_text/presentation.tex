@@ -36,6 +36,9 @@
 \setbeamercolor{color1}{bg=blue!60!black,fg=white}
 %%%%%%%%%%%%%%%%%%
 
+
+% \setbeamertemplate{footline}[miniframes theme] 
+
 \title{Построение, анализ и оптимизация динамического потока данных в однородной распределенной среде}
 \author{Борисяк Максим}
 \institute{МФТИ (ГУ)
@@ -54,12 +57,22 @@
 \newcommand{\FA}{F\!A}
 
 \begin{document}
+
+%\setbeamertemplate{headline}[miniframes theme] 
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}[infolines theme] 
+
 \begin{frame}
   % создаём титульный лист
   \maketitle
 \end{frame}
 
 \section{Введение}
+
+\begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
+\end{frame}
 
 \begin{frame}
   \frametitle{Цели работы}
@@ -77,9 +90,9 @@
   \frametitle{Определение потока данных}
   Поток данных --- модель представления вычислительных процессов, включающая:
   \begin{itemize}
-    \item набор атомарных функций-исполнителей,
+    \item \textbf{набор атомарных функций-исполнителей (блоков)},
+    \item \textbf{описание зависимостей между исполнителями},
     \item составные исполнители или подпотоки данных,
-    \item описание зависимостей между исполнителями,
     \item стратегия выполнения.
   \end{itemize}
 \end{frame}
@@ -119,6 +132,11 @@
 \section{Используемая модель}
 
 \begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
+\begin{frame}
   \frametitle{Используемая модель потоков данных}
   Используется представление в виде ориентированного графа.
   Поток данных --- кортеж $c = (B, E, I, O)$:
@@ -127,6 +145,16 @@
     \item связи $E$ --- зависимости по данным между входными портами одних и выходными портами других блоков;
     \item $I$, $O$ --- наборы входных и выходных портов (начальных данных и результатов).
   \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Наглядное представление иерархичного потока данных}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{cc_cg.pdf}
+    \caption{Шаблон составного блока. Внутри рамки показана структура шаблона внутреннего блока.}
+    \label{example:supercomposite}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -173,17 +201,12 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Наглядное представление иерархичного потока данных}
-  \begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{cc_cg.pdf}
-    \caption{Шаблон составного блока. Внутри рамки показана структура шаблона внутреннего блока.}
-    \label{example:supercomposite}
-  \end{figure}
-\end{frame}
-
 \section{Запуск потока данных}
+
+\begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
+\end{frame}
 
 \begin{frame}
   \frametitle{Состояния блока во время запуска потока данных}
@@ -234,10 +257,17 @@
 
 \section{Анализ схемы потока данных}
 
+\subsection{Анализ поведения корректного потока данных}
+
+\begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
 \begin{frame}
   \frametitle{Анализ корректных потоков данных}
   Траектория запуска --- наборы состояний потока данных во все моменты времени. \\
-  Граф причинности --- качественное описание варианта поведения потока данных:
+  \textbf{Граф причинности --- качественное описание варианта поведения потока данных:}
   \begin{itemize}
     \item вершины --- кортежи $r = (v, \pi_v, n)$, $v \in B_c$ --- блок, $\pi_v$ --- переход в автомате Мили блока $v$, $n$ - номер.
     \item ребра --- 'причины' запуска: испущенные данные одного блока приняты другим.
@@ -358,9 +388,16 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
   \frametitle{Результаты динамического уточнения оценок}
   \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{Rplot01}
+    \includegraphics[width=0.8\textwidth]{Rplot01}
     \caption{Динамика изменения оценок в случае 2-го графа причинности}
   \end{figure}
+\end{frame}
+
+\subsection{Проверка корректности потока данных}
+
+\begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
 \begin{frame}
@@ -368,7 +405,7 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
   \begin{itemize}
     \item Некорректное завершение --- во время работы волнового алгоритма по наличию состояний с остаточным данными.
     \item Варианты поглощения данных --- во время работы волнового алгоритма.
-    \item Состояния гонки --- модификация волнового алгоритма.
+    \item \textbf{Состояния гонки} --- модификация волнового алгоритма.
   \end{itemize}
 \end{frame}
 
@@ -395,14 +432,14 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
 
   \begin{subfigure}[b]{\textwidth}
     \centering
-    \includegraphics[width=0.8\textwidth]{approx_fa.pdf}
+    \includegraphics[width=0.75\textwidth]{approx_fa.pdf}
     \caption{Не детерминированный по входу автомат Мили блока аппроксимации}
     \label{notdetFA}
   \end{subfigure}
   ~
   \begin{subfigure}[b]{\textwidth}
     \centering
-    \includegraphics[width=0.8\textwidth]{approx_fa_det.pdf}
+    \includegraphics[width=0.75\textwidth]{approx_fa_det.pdf}
     \caption{Детерминированный аналог}
     \label{detFA}
   \end{subfigure}
@@ -411,6 +448,11 @@ $$\mathbb{E}(L) = (1 - a) (1 - b) \sum^{\infty}_{n = 1} n b^{n - 1} = \frac{1 - 
 \end{frame}
 
 \section{Заключение}
+
+\begin{frame}
+  \frametitle{Содержание}
+  \tableofcontents[currentsection,currentsubsection]
+\end{frame}
 
 \begin{frame}
   \frametitle{Результаты}
